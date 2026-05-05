@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/constants/route_names.dart';
+import 'package:smart_campus_app/core/theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/widgets/primary_button.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -12,130 +12,103 @@ class AdminDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              // --- Header Section ---
-              Row(
-                children: [
-                  const Icon(Icons.school, color: AppColors.primary, size: 40),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        "Smart Campus",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        "Facility Management",
-                        style: TextStyle(
-                            color: AppColors.textSecondary, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              _buildHeader(),
+              const SizedBox(height: 30),
+              const Text("Welcome, Israel",
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              const Text("Manage your campus facilities efficiently.",
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+              const SizedBox(height: 30),
+              _buildStatGrid(),
               const SizedBox(height: 40),
-
-              // --- Welcome Section ---
-              const Text(
-                "Welcome, Henok!",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const Text(
-                "What would you like to do today?",
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-              ),
-              const SizedBox(height: 50),
-
-              // --- "View Facilities" Card ---
-              Center(
-                child: GestureDetector(
-                  onTap: () => context.push(RouteNames.manageFacilities),
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
-                          Icons.business_outlined,
-                          size: 80,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          "View Facilities",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // --- "Add Facility" Button ---
+              const Text("Quick Actions",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
               PrimaryButton(
-                text: "+ Add Facility",
-                onPressed: () {
-                  context.push(RouteNames.addFacility);
-                },
+                text: "Manage All Facilities",
+                onPressed: () => context.go('/admin/manage'),
+              ),
+              const SizedBox(height: 12),
+              PrimaryButton(
+                text: "Add New Facility",
+                onPressed: () => context.go('/admin/add'),
               ),
             ],
           ),
         ),
       ),
-      // --- Bottom Navigation Bar ---
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.card,
-        currentIndex: 0,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textDisabled,
-        onTap: (index) {
-          if (index == 0) context.go(RouteNames.adminDashboard);
-          if (index == 1) context.push(RouteNames.manageFacilities);
-          if (index == 2) context.push(RouteNames.addFacility);
-          if (index == 3) context.push(RouteNames.adminProfile);
-        },
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view), label: 'Dashboard'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.manage_accounts), label: 'Manage'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add_box_outlined), label: 'Add'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
+      bottomNavigationBar: const AdminBottomNavBar(currentIndex: 0),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.school, color: AppColors.primary, size: 40),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text("Smart Campus",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text("Admin Dashboard",
+                    style: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
+        const CircleAvatar(
+            backgroundColor: AppColors.primary,
+            child: Icon(Icons.person, color: Colors.white)),
+      ],
+    );
+  }
+
+  Widget _buildStatGrid() {
+    return Row(
+      children: [
+        _buildStatBox("Facilities", "12", Icons.business),
+        const SizedBox(width: 16),
+        _buildStatBox("Requests", "5", Icons.pending_actions),
+      ],
+    );
+  }
+
+  Widget _buildStatBox(String label, String val, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+            ]),
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 30),
+            const SizedBox(height: 8),
+            Text(val,
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 12)),
+          ],
+        ),
       ),
     );
   }
