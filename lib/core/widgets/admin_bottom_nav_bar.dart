@@ -27,24 +27,33 @@ class AdminBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
+      // 🔹 Forces labels to show and prevents "shifting" animation
+      type: BottomNavigationBarType.fixed, 
       selectedItemColor: const Color(0xFF2563EB),
       unselectedItemColor: const Color(0xFF9CA3AF),
+      // 🔹 Ensures text is always rendered
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
       onTap: (index) => _onTap(context, index),
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard),
+          icon: Icon(Icons.dashboard_outlined),
+          activeIcon: Icon(Icons.dashboard),
           label: "Dashboard",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.list),
+          icon: Icon(Icons.list_alt_outlined),
+          activeIcon: Icon(Icons.list),
           label: "Manage",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.add),
+          icon: Icon(Icons.add_circle_outline),
+          activeIcon: Icon(Icons.add_circle),
           label: "Add",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
+          icon: Icon(Icons.admin_panel_settings_outlined),
+          activeIcon: Icon(Icons.admin_panel_settings),
           label: "Profile",
         ),
       ],

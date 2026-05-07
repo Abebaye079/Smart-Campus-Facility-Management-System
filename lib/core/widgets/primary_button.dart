@@ -3,12 +3,14 @@ import '../theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  // 1. Added '?' to make onPressed nullable
+  final VoidCallback? onPressed; 
 
   const PrimaryButton({
     super.key,
     required this.text,
-    required this.onPressed,
+    // 2. Removed 'required' here so it can accept 'null'
+    this.onPressed, 
   });
 
   @override
@@ -20,6 +22,8 @@ class PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          // This ensures the button looks "disabled" when onPressed is null
+          disabledBackgroundColor: Colors.grey.shade300, 
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

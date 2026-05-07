@@ -27,24 +27,33 @@ class UserBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
+      // 🔹 THIS LINE ENSURES LABELS ALWAYS SHOW
+      type: BottomNavigationBarType.fixed, 
       selectedItemColor: const Color(0xFF2563EB),
       unselectedItemColor: const Color(0xFF9CA3AF),
+      // 🔹 THESE ENSURE THE FONT STYLES ARE CONSISTENT
+      showSelectedLabels: true,
+      showUnselectedLabels: true,
       onTap: (index) => _onTap(context, index),
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
           label: "Home",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.apartment),
+          icon: Icon(Icons.apartment_outlined),
+          activeIcon: Icon(Icons.apartment),
           label: "Facilities",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.book),
+          icon: Icon(Icons.calendar_month_outlined),
+          activeIcon: Icon(Icons.calendar_month),
           label: "Bookings",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
+          icon: Icon(Icons.person_outline),
+          activeIcon: Icon(Icons.person),
           label: "Profile",
         ),
       ],
