@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/secondary_button.dart';
+import 'package:smart_campus_app/core/widgets/destructive_button.dart';
 
 class BookingCard extends StatelessWidget {
   final String title;
