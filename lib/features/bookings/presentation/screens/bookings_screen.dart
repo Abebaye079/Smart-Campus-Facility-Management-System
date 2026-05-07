@@ -41,7 +41,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
       id: '2',
       title: 'Conference Hall B',
       date: 'Thu, Oct 17',
-      time: '2:00 PM–3:00 PM',
+      time: '1:00 PM–2:00 PM',
     ),
   ];
 
