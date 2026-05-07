@@ -68,7 +68,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
