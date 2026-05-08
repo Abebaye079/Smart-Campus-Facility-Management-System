@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class CustomDialog {
   static void show({
@@ -6,20 +7,26 @@ class CustomDialog {
     required String title,
     required String message,
     required VoidCallback onConfirm,
+    bool isSuccess = false, // Default is false, so it won't break existing code
   }) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
+      barrierDismissible: !isSuccess, 
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: TextStyle(color: isSuccess ? AppColors.success : Colors.black)),
         content: Text(message),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("No"),
-          ),
+          // Only show 'No' if it's a confirmation, hide it for Success
+          if (!isSuccess)
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("No", style: TextStyle(color: Colors.grey)),
+            ),
           TextButton(
             onPressed: onConfirm,
-            child: const Text("Yes"),
+            child: Text(isSuccess ? "OK" : "Yes", 
+              style: TextStyle(color: isSuccess ? AppColors.success : AppColors.primary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
