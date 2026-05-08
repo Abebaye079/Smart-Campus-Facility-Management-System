@@ -17,48 +17,71 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             const MainHeaderWidget(),
             Expanded(
-              child: SingleChildScrollView(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 30),
                     const Text(
-                      "Welcome, Israel",
+                      "Welcome, Henok!",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 4),
                     const Text(
-                      "Manage your campus facilities efficiently.",
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 16,
+                      "What would you like to do today?",
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                    const Spacer(),
+                    // Centered Large Action Card
+                    Center(
+                      child: InkWell(
+                        onTap: () => context.go('/admin/manage'),
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.business,
+                                size: 60,
+                                color: AppColors.primary,
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                "View Facilities",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    _buildStatGrid(),
-                    const SizedBox(height: 40),
-                    const Text(
-                      "Quick Actions",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    const Spacer(),
+                    // Large Add Facility Button
                     PrimaryButton(
-                      text: "Manage All Facilities",
-                      onPressed: () => context.go('/admin/manage'),
-                    ),
-                    const SizedBox(height: 12),
-                    PrimaryButton(
-                      text: "Add New Facility",
+                      text: "+ Add Facility",
                       onPressed: () => context.go('/admin/add'),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -67,48 +90,6 @@ class AdminDashboardScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: const AdminBottomNavBar(currentIndex: 0),
-    );
-  }
-
-  Widget _buildStatGrid() {
-    return Row(
-      children: [
-        _buildStatBox("Facilities", "12", Icons.business),
-        const SizedBox(width: 16),
-        _buildStatBox("Requests", "5", Icons.pending_actions),
-      ],
-    );
-  }
-
-  Widget _buildStatBox(String label, String val, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.primary, size: 30),
-            const SizedBox(height: 8),
-            Text(
-              val,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
