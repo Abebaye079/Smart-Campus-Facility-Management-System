@@ -6,10 +6,7 @@ import '../constants/route_names.dart';
 class MainHeaderWidget extends StatelessWidget {
   final bool showLinks;
 
-  const MainHeaderWidget({
-    super.key,
-    this.showLinks = false,
-  });
+  const MainHeaderWidget({super.key, this.showLinks = true});
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +26,15 @@ class MainHeaderWidget extends StatelessWidget {
                   Text(
                     'Smart Campus',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   Text(
                     'Facility Management',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),

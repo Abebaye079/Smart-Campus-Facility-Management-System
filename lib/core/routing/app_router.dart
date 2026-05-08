@@ -27,7 +27,7 @@ import '../../features/admin/presentation/screens/add_facility_screen.dart';
 import '../../features/admin/presentation/screens/admin_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: RouteNames.splash,
+  initialLocation: RouteNames.addFacility,
   routes: [
     GoRoute(
       path: RouteNames.adminProfile,
@@ -51,7 +51,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: RouteNames.facilityDetails,
-      builder: (context, state) => const FacilityDetailScreen(),
+      builder: (context, state) => const FacilitiesDetailScreen(),
     ),
     GoRoute(
       path: RouteNames.bookingStep,
