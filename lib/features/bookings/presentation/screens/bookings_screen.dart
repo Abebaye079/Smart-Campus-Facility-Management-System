@@ -55,20 +55,28 @@ class _BookingsScreenState extends State<BookingsScreen> {
     CustomDialog.show(
       context: context,
       title: "Cancel Booking?",
-      message: "Are you sure you want to cancel the booking for ${booking.title} on ${booking.date}?",
+      message: "Are you sure you want to cancel the booking for ${booking.title}?",
+      confirmText: "Yes, Cancel",  // Matches Figma
+      cancelText: "Keep Booking", // Matches Figma
+      isBookingCancel: true,      // Triggers Horizontal Layout
       onConfirm: () {
         Navigator.pop(context); // Close dialog
+        
         setState(() {
           _bookings.removeWhere((b) => b.id == booking.id);
           _showCancelledBanner = true;
         });
+
+        // Hide the banner after 3 seconds
         Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) setState(() => _showCancelledBanner = false);
+          if (mounted) {
+            setState(() => _showCancelledBanner = false);
+          }
         });
       },
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -111,6 +119,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             );
                           },
                         ),
+                  
+                  // Success Banner for Cancellation
                   if (_showCancelledBanner)
                     Positioned(
                       bottom: 20,
@@ -119,7 +129,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF9999),
+                          color: const Color(0xFFFF9999), // Matches your Delete Success banner
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Row(
@@ -129,7 +139,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             SizedBox(width: 10),
                             Text(
                               'Cancelled Successfully!',
-                              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: Colors.black, 
+                                fontWeight: FontWeight.bold
+                              ),
                             ),
                           ],
                         ),
@@ -142,6 +155,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
         ),
       ),
       bottomNavigationBar: const UserBottomNavBar(currentIndex: 2),
-    ); 
+    );
   }
 }
