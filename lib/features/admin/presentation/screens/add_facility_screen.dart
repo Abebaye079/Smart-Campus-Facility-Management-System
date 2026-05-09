@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_campus_app/core/theme/app_colors.dart';
 import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/widgets/main_header.dart';
 import 'package:smart_campus_app/core/widgets/input_field.dart';
 import 'package:smart_campus_app/core/widgets/primary_button.dart';
-import 'package:smart_campus_app/core/widgets/back_button.dart';
-import 'package:smart_campus_app/core/widgets/main_header.dart';
+import '../../../../core/constants/route_names.dart';
 
 class AddFacilityScreen extends StatefulWidget {
   const AddFacilityScreen({super.key});
@@ -15,9 +15,9 @@ class AddFacilityScreen extends StatefulWidget {
 }
 
 class _AddFacilityScreenState extends State<AddFacilityScreen> {
-  final nameController = TextEditingController();
-  final capController = TextEditingController();
-  final descController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _capController = TextEditingController();
+  final _descController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -29,44 +29,52 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
             const MainHeaderWidget(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    BackButtonWidget(onTap: () => context.go('/admin/manage')),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
                     const Text(
-                      "Add New Facility",
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "Register a new building or room in the system.",
-                      style: TextStyle(color: AppColors.textSecondary),
+                      "Add Facility",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 30),
-                    InputField(hint: "Facility Name", controller: nameController),
-                    const SizedBox(height: 20),
-                    InputField(hint: "Capacity (Number)", controller: capController),
-                    const SizedBox(height: 20),
-                    InputField(
-                      hint: "Description / Building",
-                      controller: descController,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: AppColors.border.withOpacity(0.5),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          InputField(
+                            hint: "Facility Name",
+                            controller: _nameController,
+                          ),
+                          const SizedBox(height: 16),
+                          InputField(
+                            hint: "Capacity",
+                            controller: _capController,
+                          ),
+                          const SizedBox(height: 16),
+                          InputField(
+                            hint: "Description",
+                            controller: _descController,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 80),
+                    PrimaryButton(
+                      text: "Save Changes",
+                      onPressed: () => context.go(RouteNames.manageFacilities),
                     ),
                     const SizedBox(height: 40),
-                    PrimaryButton(
-                      text: "Save Facility",
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Facility Added Successfully!"),
-                            backgroundColor: Colors.green,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                        context.go('/admin/manage');
-                      },
-                    ),
                   ],
                 ),
               ),

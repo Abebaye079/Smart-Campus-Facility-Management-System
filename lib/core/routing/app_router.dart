@@ -7,7 +7,6 @@ import '../../features/splash/presentation/screens/splash_screen.dart';
 // Auth
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
-
 // User
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/facilities/presentation/screens/facilities_screen.dart';
@@ -27,7 +26,7 @@ import '../../features/admin/presentation/screens/add_facility_screen.dart';
 import '../../features/admin/presentation/screens/admin_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: RouteNames.addFacility,
+  initialLocation: RouteNames.splash,
   routes: [
     GoRoute(
       path: RouteNames.adminProfile,
@@ -41,6 +40,7 @@ final GoRouter appRouter = GoRouter(
       path: RouteNames.signup,
       builder: (context, state) => const SignupScreen(),
     ),
+
     GoRoute(
       path: RouteNames.home,
       builder: (context, state) => const HomeScreen(),

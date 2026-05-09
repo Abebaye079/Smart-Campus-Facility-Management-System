@@ -4,6 +4,7 @@ import 'package:smart_campus_app/core/theme/app_colors.dart';
 import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
 import 'package:smart_campus_app/core/widgets/primary_button.dart';
 import 'package:smart_campus_app/core/widgets/main_header.dart';
+import '../../../../core/constants/route_names.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -36,10 +37,9 @@ class AdminDashboardScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                     const Spacer(),
-                    // Centered Large Action Card
                     Center(
                       child: InkWell(
-                        onTap: () => context.go('/admin/manage'),
+                        onTap: () => context.go(RouteNames.manageFacilities),
                         child: Container(
                           width: 180,
                           height: 180,
@@ -76,10 +76,9 @@ class AdminDashboardScreen extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    // Large Add Facility Button
                     PrimaryButton(
                       text: "+ Add Facility",
-                      onPressed: () => context.go('/admin/add'),
+                      onPressed: () => context.go(RouteNames.addFacility),
                     ),
                     const SizedBox(height: 40),
                   ],
