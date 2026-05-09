@@ -17,14 +17,24 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleLogin() {
     final password = _passwordController.text.trim();
 
+    // USER LOGIN → 8 characters
     if (password.length == 8) {
+      context.go(RouteNames.home);
+      return;
+    }
+
+    // ADMIN LOGIN → 4 characters
+    if (password.length == 4) {
       context.go(RouteNames.adminDashboard);
       return;
     }
 
+    // INVALID PASSWORD
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Password must be exactly 8 characters long.'),
+        content: Text(
+          'Password must be 8 characters for User or 4 characters for Admin.',
+        ),
         duration: Duration(seconds: 2),
       ),
     );
@@ -48,7 +58,6 @@ class _LoginScreenState extends State<LoginScreen> {
           style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       ),
-
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -58,11 +67,9 @@ class _LoginScreenState extends State<LoginScreen> {
               color: AppColors.card,
               borderRadius: BorderRadius.circular(8),
             ),
-
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header
                 const Text(
                   'LOG IN',
                   style: TextStyle(
@@ -71,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const Text(
                   'TO CONTINUE',
                   style: TextStyle(color: AppColors.primaryLight, fontSize: 20),
@@ -78,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 30),
 
-                // Email
+                // EMAIL
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -88,6 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 8),
 
                 TextField(
@@ -102,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 20),
 
-                // Password
+                // PASSWORD
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -112,6 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 8),
 
                 TextField(
@@ -126,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 30),
 
-                // Login Button
+                // LOGIN BUTTON
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -151,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 30),
 
-                // Footer
+                // FOOTER
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -160,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () {
                         context.go(RouteNames.signup);
                       },
-                      child: Text(
+                      child: const Text(
                         'SignUp',
                         style: TextStyle(fontWeight: FontWeight.w500),
                       ),
