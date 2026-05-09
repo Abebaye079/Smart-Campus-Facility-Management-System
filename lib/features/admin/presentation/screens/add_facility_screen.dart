@@ -20,6 +20,14 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
   final _descController = TextEditingController();
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _capController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -41,6 +49,8 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
+
+                    // Input Card Section
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -55,23 +65,31 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
                           InputField(
                             hint: "Facility Name",
                             controller: _nameController,
+                            prefixIcon: Icons.domain_outlined,
                           ),
                           const SizedBox(height: 16),
                           InputField(
                             hint: "Capacity",
                             controller: _capController,
+                            prefixIcon: Icons.people_outline,
                           ),
                           const SizedBox(height: 16),
                           InputField(
                             hint: "Description",
                             controller: _descController,
+                            prefixIcon: Icons.description_outlined,
+                            maxLines:
+                                5, 
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 80),
+
                     PrimaryButton(
-                      text: "Save Changes",
+                      text: "Save",
+                      icon: Icons.save_outlined,
+                      borderRadius: 28, 
                       onPressed: () => context.go(RouteNames.manageFacilities),
                     ),
                     const SizedBox(height: 40),

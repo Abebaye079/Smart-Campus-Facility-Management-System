@@ -38,9 +38,8 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: RouteNames.signup,
-      builder: (context, state) => const SignupScreen(),
+      builder: (context, state) => const SignUpScreen(),
     ),
-
     GoRoute(
       path: RouteNames.home,
       builder: (context, state) => const HomeScreen(),

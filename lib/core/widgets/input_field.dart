@@ -6,11 +6,16 @@ class InputField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscure;
 
+  final IconData? prefixIcon;
+  final int maxLines;
+
   const InputField({
     super.key,
     required this.hint,
     required this.controller,
     this.obscure = false,
+    this.prefixIcon,
+    this.maxLines = 1,
   });
 
   @override
@@ -18,11 +23,14 @@ class InputField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: obscure,
+      maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hint,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, color: AppColors.primary)
+            : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: AppColors.primary),
           borderRadius: BorderRadius.circular(10),

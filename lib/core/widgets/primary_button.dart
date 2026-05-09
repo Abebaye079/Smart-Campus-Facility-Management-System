@@ -3,14 +3,17 @@ import '../theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  // 1. Added '?' to make onPressed nullable
-  final VoidCallback? onPressed; 
+  final VoidCallback? onPressed;
+
+  final IconData? icon;
+  final double? borderRadius;
 
   const PrimaryButton({
     super.key,
     required this.text,
-    // 2. Removed 'required' here so it can accept 'null'
-    this.onPressed, 
+    this.onPressed,
+    this.icon, // Optional
+    this.borderRadius, // Optional
   });
 
   @override
@@ -22,14 +25,24 @@ class PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          // This ensures the button looks "disabled" when onPressed is null
-          disabledBackgroundColor: Colors.grey.shade300, 
+          disabledBackgroundColor: Colors.grey.shade300,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius ?? 12),
           ),
         ),
-        child: Text(text),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text),
+
+            if (icon != null) ...[
+              const SizedBox(width: 8),
+              Icon(icon, size: 20),
+            ],
+          ],
+        ),
       ),
     );
   }

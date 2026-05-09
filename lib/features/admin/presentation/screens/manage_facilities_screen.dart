@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:smart_campus_app/core/theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/manage_admin_header.dart';
 import 'package:smart_campus_app/core/widgets/facility_admin_card.dart';
 import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
-import 'package:smart_campus_app/core/widgets/search_bar.dart';
-import 'package:smart_campus_app/core/widgets/main_header.dart';
-import 'package:smart_campus_app/core/widgets/confirmation_dialog.dart';
 import 'package:smart_campus_app/core/widgets/input_field.dart';
 import 'package:smart_campus_app/core/widgets/primary_button.dart';
+import 'package:smart_campus_app/core/widgets/confirmation_dialog.dart';
 
 class ManageFacilitiesScreen extends StatefulWidget {
   const ManageFacilitiesScreen({super.key});
@@ -16,8 +15,6 @@ class ManageFacilitiesScreen extends StatefulWidget {
 }
 
 class _ManageFacilitiesScreenState extends State<ManageFacilitiesScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
   final List<Map<String, String>> _allFacilities = [
     {
       "name": "Auditorium",
@@ -39,6 +36,25 @@ class _ManageFacilitiesScreenState extends State<ManageFacilitiesScreen> {
     );
   }
 
+  // Handle Delete Confirmation
+  void _showDeleteConfirmation(int index) {
+    CustomDialog.show(
+      context: context,
+      title: "Confirm deletion?",
+      message: "Are you sure you want to delete this item?",
+      isDelete: true,
+      cancelText: "Cancel", // Overrides the "No" default in the widget
+      onConfirm: () {
+        setState(() {
+          _allFacilities.removeAt(index);
+        });
+        Navigator.pop(context);
+        _showStatus("Facility Deleted Successfully!", Colors.redAccent);
+      },
+    );
+  }
+
+  // Handle Edit Pop-up
   void _showEditPopUp(Map<String, String> data) {
     final nameEdit = TextEditingController(text: data['name']);
     final capEdit = TextEditingController(text: data['cap']);
@@ -47,44 +63,62 @@ class _ManageFacilitiesScreenState extends State<ManageFacilitiesScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Edit Facility Details"),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InputField(hint: "Name", controller: nameEdit),
-            const SizedBox(height: 12),
-            InputField(hint: "Capacity", controller: capEdit),
-            const SizedBox(height: 12),
-            InputField(hint: "Description", controller: descEdit),
-            const SizedBox(height: 20),
+            InputField(
+              hint: "Facility Name",
+              controller: nameEdit,
+              prefixIcon: Icons.domain_outlined,
+            ),
+            const SizedBox(height: 16),
+            InputField(
+              hint: "Capacity",
+              controller: capEdit,
+              prefixIcon: Icons.people_outline,
+            ),
+            const SizedBox(height: 16),
+            InputField(
+              hint: "Description",
+              controller: descEdit,
+              prefixIcon: Icons.description_outlined,
+              maxLines: 4,
+            ),
+            const SizedBox(height: 24),
             PrimaryButton(
-              text: "Save Changes",
+              text: "Save",
+              icon: Icons.save_outlined,
+              borderRadius: 28,
               onPressed: () {
-                // UI Show: Close and show snackbar without changing underlying data
                 Navigator.pop(context);
-                _showStatus("Facility Updated Successfully!", Colors.green);
+                _showStatus("Added successfully!", Colors.green);
               },
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.black12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.black54),
+                ),
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  void _showDeleteConfirmation(int index) {
-    CustomDialog.show(
-      context: context,
-      title: "Delete Facility",
-      message: "This will permanently remove this location from the system.",
-      onConfirm: () {
-        setState(() {
-          // This actually updates the list for the current session
-          _allFacilities.removeAt(index);
-        });
-        Navigator.pop(context);
-        _showStatus("Facility Deleted Successfully!", Colors.redAccent);
-      },
     );
   }
 
@@ -95,18 +129,15 @@ class _ManageFacilitiesScreenState extends State<ManageFacilitiesScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const MainHeaderWidget(),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SearchBarWidget(controller: _searchController),
-            ),
+            const ManageAdminHeader(),
+
             const SizedBox(height: 20),
             const Text(
               "Manage Facilities",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
+
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
