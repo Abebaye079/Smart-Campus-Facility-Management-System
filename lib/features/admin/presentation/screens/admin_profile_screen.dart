@@ -70,7 +70,7 @@ class AdminProfileScreen extends StatelessWidget {
               width: 250,
               height: 50,
               child: ElevatedButton(
-                onPressed: () => context.go(RouteNames.login),
+                onPressed: () => context.go(RouteNames.splash),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2962FF),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
