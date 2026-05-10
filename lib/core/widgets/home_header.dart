@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/main_header.dart';
 
@@ -7,18 +8,30 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+    // We call the MainHeader but pass the links into the 'trailing' slot
+    return MainHeaderWidget(
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLink(context, 'About Us', '/about'),
+          const SizedBox(width: 12),
+          _buildLink(context, 'FAQ', '/faq'),
         ],
       ),
-      child: const MainHeaderWidget(showLinks: true),
+    );
+  }
+
+  Widget _buildLink(BuildContext context, String label, String route) {
+    return InkWell(
+      onTap: () => context.push(route),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: AppColors.primary,
+        ),
+      ),
     );
   }
 }

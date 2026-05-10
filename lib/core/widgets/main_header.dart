@@ -1,69 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
-import '../constants/route_names.dart';
 
 class MainHeaderWidget extends StatelessWidget {
-  final bool showLinks;
+  // 1. Define the optional slot
+  final Widget? trailing; 
 
-  const MainHeaderWidget({super.key, this.showLinks = true});
+  const MainHeaderWidget({super.key, this.trailing});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.card,
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Left Side: Always shows Logo and Title
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.school, color: AppColors.primary, size: 36),
               const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Smart Campus',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                   ),
                   Text(
                     'Facility Management',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                          color: AppColors.textSecondary,
+                        ),
                   ),
                 ],
               ),
             ],
           ),
 
-          if (showLinks)
-            Row(
-              children: [
-                _buildSmallLink(context, 'About Us', RouteNames.about),
-                const SizedBox(width: 12),
-                _buildSmallLink(context, 'FAQ', RouteNames.faq),
-              ],
-            ),
+          // 2. Right Side: ONLY shows content if 'trailing' is not null
+          if (trailing != null) trailing!,
         ],
-      ),
-    );
-  }
-
-  Widget _buildSmallLink(BuildContext context, String label, String route) {
-    return InkWell(
-      onTap: () => context.push(route),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
-        ),
       ),
     );
   }
