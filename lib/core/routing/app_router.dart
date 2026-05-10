@@ -29,7 +29,7 @@ final GoRouter appRouter = GoRouter(
   initialLocation: RouteNames.splash,
   routes: [
     GoRoute(
-      path: RouteNames.adminProfile,
+      path: RouteNames.splash,
       builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
