@@ -1,168 +1,181 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smart_campus_app/core/constants/route_names.dart';
-import 'package:smart_campus_app/core/theme/app_colors.dart';
+import '../../../../core/constants/route_names.dart';
+import '../../../../core/widgets/input_field.dart';
+import '../../../../core/widgets/primary_button.dart';
 
-class SignUpScreen extends StatelessWidget {
-  const SignUpScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Sign up',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
-        ),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 80),
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 80),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                const Text(
-                  'SIGN UP',
-                  style: TextStyle(
-                    color: AppColors.primaryLight,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Text(
-                  'TO CONTINUE',
-                  style: TextStyle(color: AppColors.primaryLight, fontSize: 20),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Full Name
-                _buildLabel(context, "Full Name"),
-                const SizedBox(height: 8),
-                const TextField(
-                  decoration: InputDecoration(
-                    hintText: "Enter your full name",
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Email
-                _buildLabel(context, "Email"),
-                const SizedBox(height: 8),
-                const TextField(
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: "Enter your email",
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Password
-                _buildLabel(context, "Password"),
-                const SizedBox(height: 8),
-                const TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: "Create a password",
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Confirm Password
-                _buildLabel(context, "Confirm Password"),
-                const SizedBox(height: 8),
-                const TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: "Repeat your password",
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Sign Up Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // ✅ Navigate to Home or Login after registration
-                      context.go(RouteNames.home);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryLight,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Footer
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Already have an account? "),
-                    GestureDetector(
-                      onTap: () {
-                        // ✅ Navigate back to Login
-                        context.go(RouteNames.login);
-                      },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Helper widget to keep the code clean, similar to your Align/Text pattern
-  Widget _buildLabel(BuildContext context, String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-      ),
-    );
-  }
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passController = TextEditingController();
+  final _confirmPassController = TextEditingController();
+  
+  final _passFocusNode = FocusNode(); 
+  bool _showPassHint = false;
+  bool _showBanner = false;
+  String _bannerMessage = "";
+
+  @override
+  void initState() {
+    super.initState();
+   
+    _passFocusNode.addListener(() {
+      setState(() {
+        _showPassHint = _passFocusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _passFocusNode.dispose(); 
+    super.dispose();
+  }
+
+  void _handleSignUp() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passController.text.trim();
+    final confirmPassword = _confirmPassController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      _triggerBanner("Please fill in all fields.");
+      return;
+    }
+
+    if (!email.contains('@')) {
+      _triggerBanner("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      _triggerBanner("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _triggerBanner("Passwords do not match.");
+      return;
+    }
+
+    context.go(RouteNames.login);
+  }
+
+  void _triggerBanner(String msg) {
+    setState(() {
+      _bannerMessage = msg;
+      _showBanner = true;
+    });
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showBanner = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 80),
+              child: Column(
+                children: [
+                  const Text('SIGN UP',
+                      style: TextStyle(
+                          color: Color(0xFF2962FF),
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold)),
+                  const Text('TO CONTINUE',
+                      style: TextStyle(color: Color(0xFF2962FF), fontSize: 20)),
+                  const SizedBox(height: 40),
+                  _buildLabel("Full Name"),
+                  InputField(
+                      hint: "Enter your full name",
+                      controller: _nameController),
+                  const SizedBox(height: 20),
+                  _buildLabel("Email"),
+                  InputField(
+                      hint: "Enter your email", controller: _emailController),
+                  const SizedBox(height: 20),
+                  _buildLabel("Password"),
+                  InputField(
+                      hint: "Create a password",
+                      controller: _passController,
+                      obscure: true,
+                      focusNode: _passFocusNode), 
+                  
+                  
+                  if (_showPassHint) ...[
+                    const SizedBox(height: 8),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'password must be atleast 8 characters',
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+                  _buildLabel("Confirm Password"),
+                  InputField(
+                      hint: "Repeat your password",
+                      controller: _confirmPassController,
+                      obscure: true),
+                  const SizedBox(height: 40),
+                  PrimaryButton(text: 'Sign Up', onPressed: _handleSignUp),
+                  const SizedBox(height: 25),
+                  _buildFooter("Already have an account? ", "Login",
+                      () => context.go(RouteNames.login)),
+                ],
+              ),
+            ),
+          ),
+          if (_showBanner) _buildBanner(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) => Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(text,
+              style: const TextStyle(
+                  color: Colors.grey, fontWeight: FontWeight.w500))));
+
+  Widget _buildFooter(String text, String action, VoidCallback onTap) =>
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(text, style: const TextStyle(color: Colors.grey)),
+        GestureDetector(
+            onTap: onTap,
+            child: Text(action,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Color(0xFF2962FF))))
+      ]);
+
+  Widget _buildBanner() => Positioned(
+      bottom: 50,
+      left: 20,
+      right: 20,
+      child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+          decoration: BoxDecoration(
+              color: const Color(0xFFFF9999),
+              borderRadius: BorderRadius.circular(20)),
+          child: Text(_bannerMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16))));
