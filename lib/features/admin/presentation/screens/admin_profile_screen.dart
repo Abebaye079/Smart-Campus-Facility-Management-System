@@ -37,11 +37,11 @@ class AdminProfileScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const Text(
-                    "Sarah Taye",
+                    "Henok Desalegn",
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const Text(
-                    "sarah.taye@university.edu",
+                    "henok.desalegn@university.edu",
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 15),

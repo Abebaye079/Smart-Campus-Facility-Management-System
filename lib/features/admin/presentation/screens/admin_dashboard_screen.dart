@@ -25,7 +25,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   children: [
                     const SizedBox(height: 30),
                     const Text(
-                      "Welcome, Henok!",
+                      "Welcome, Henok Desalegn!",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
