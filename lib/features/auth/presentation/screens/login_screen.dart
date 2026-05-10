@@ -21,20 +21,21 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    
+    
     if (email.isEmpty || password.isEmpty) {
       _triggerBanner("Please fill in all fields.");
       return;
     }
 
-
+    
     if (!email.contains('@')) {
       _triggerBanner("Please enter a valid email address.");
       return;
     }
 
+    
     if (password.length == 8) {
-   
+    
       context.go(RouteNames.home);
     } else if (password.length == 6) {
       
