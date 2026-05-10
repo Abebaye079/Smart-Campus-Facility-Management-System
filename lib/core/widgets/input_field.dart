@@ -5,9 +5,9 @@ class InputField extends StatelessWidget {
   final String hint;
   final TextEditingController controller;
   final bool obscure;
-
   final IconData? prefixIcon;
   final int maxLines;
+  final FocusNode? focusNode; 
 
   const InputField({
     super.key,
@@ -16,6 +16,7 @@ class InputField extends StatelessWidget {
     this.obscure = false,
     this.prefixIcon,
     this.maxLines = 1,
+    this.focusNode, 
   });
 
   @override
@@ -24,9 +25,9 @@ class InputField extends StatelessWidget {
       controller: controller,
       obscureText: obscure,
       maxLines: maxLines,
+      focusNode: focusNode, 
       decoration: InputDecoration(
         hintText: hint,
-
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, color: AppColors.primary)
             : null,
