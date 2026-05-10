@@ -48,11 +48,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     children: [
                       const Text(
-                        "Abel Teshome",
+                        "Hana Tesfaye",
                         style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const Text(
-                        "abel.tesh@university.edu",
+                        "hana.tesfaye@university.edu",
                         style: TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(height: 15),

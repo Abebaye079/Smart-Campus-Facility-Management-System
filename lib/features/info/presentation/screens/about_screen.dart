@@ -16,7 +16,7 @@ class AboutScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const MainHeaderWidget(showLinks: true),
+            const MainHeaderWidget(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32),
