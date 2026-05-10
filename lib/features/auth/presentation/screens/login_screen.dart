@@ -1,187 +1,133 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smart_campus_app/core/constants/route_names.dart';
-import 'package:smart_campus_app/core/theme/app_colors.dart';
+import '../../../../core/constants/route_names.dart';
+import '../../../../core/widgets/input_field.dart';
+import '../../../../core/widgets/primary_button.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key});
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _showBanner = false;
+  String _bannerMessage = "";
 
-  void _handleLogin() {
-    final password = _passwordController.text.trim();
+  void _handleLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-    // USER LOGIN → 8 characters
-    if (password.length == 8) {
-      context.go(RouteNames.home);
-      return;
-    }
+    
+    if (email.isEmpty || password.isEmpty) {
+      _triggerBanner("Please fill in all fields.");
+      return;
+    }
 
-    // ADMIN LOGIN → 4 characters
-    if (password.length == 4) {
-      context.go(RouteNames.adminDashboard);
-      return;
-    }
 
-    // INVALID PASSWORD
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Password must be 8 characters for User or 4 characters for Admin.',
-        ),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+    if (!email.contains('@')) {
+      _triggerBanner("Please enter a valid email address.");
+      return;
+    }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+    if (password.length == 8) {
+   
+      context.go(RouteNames.home);
+    } else if (password.length == 6) {
+      
+      context.go(RouteNames.adminDashboard);
+    } else {
+      _triggerBanner("Invalid credentials.");
+    }
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Login',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
-        ),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 80),
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 80),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'LOG IN',
-                  style: TextStyle(
-                    color: AppColors.primaryLight,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+  void _triggerBanner(String msg) {
+    setState(() {
+      _bannerMessage = msg;
+      _showBanner = true;
+    });
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showBanner = false);
+    });
+  }
 
-                const Text(
-                  'TO CONTINUE',
-                  style: TextStyle(color: AppColors.primaryLight, fontSize: 20),
-                ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('LOG IN',
+                    style: TextStyle(
+                        color: Color(0xFF2962FF),
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold)),
+                const Text('TO CONTINUE',
+                    style: TextStyle(color: Color(0xFF2962FF), fontSize: 20)),
+                const SizedBox(height: 40),
+                _buildLabel("Email"),
+                InputField(hint: 'Enter your email', controller: _emailController),
+                const SizedBox(height: 20),
+                _buildLabel("Password"),
+                InputField(
+                    hint: 'Enter your password',
+                    controller: _passwordController,
+                    obscure: true),
+                const SizedBox(height: 40),
+                PrimaryButton(text: 'Login', onPressed: _handleLogin),
+                const SizedBox(height: 25),
+                _buildFooter("Don't have an account? ", "SignUp",
+                    () => context.go(RouteNames.signup)),
+              ],
+            ),
+          ),
+          if (_showBanner) _buildBanner(),
+        ],
+      ),
+    );
+  }
 
-                const SizedBox(height: 30),
+  Widget _buildLabel(String text) => Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(text,
+              style: const TextStyle(
+                  color: Colors.grey, fontWeight: FontWeight.w500))));
 
-                // EMAIL
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Email',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+  Widget _buildFooter(String text, String action, VoidCallback onTap) =>
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(text, style: const TextStyle(color: Colors.grey)),
+        GestureDetector(
+            onTap: onTap,
+            child: Text(action,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Color(0xFF2962FF))))
+      ]);
 
-                const SizedBox(height: 8),
-
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your email',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // PASSWORD
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Password',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your password',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // LOGIN BUTTON
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryLight,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // FOOTER
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    GestureDetector(
-                      onTap: () {
-                        context.go(RouteNames.signup);
-                      },
-                      child: const Text(
-                        'SignUp',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildBanner() => Positioned(
+        bottom: 50,
+        left: 20,
+        right: 20,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+          decoration: BoxDecoration(
+              color: const Color(0xFFFF9999),
+              borderRadius: BorderRadius.circular(20)),
+          child: Text(_bannerMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16)),
+        ),
+      );
 }
