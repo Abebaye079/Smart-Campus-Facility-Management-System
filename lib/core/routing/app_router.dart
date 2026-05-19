@@ -20,10 +20,10 @@ import '../../features/info/presentation/screens/about_screen.dart';
 import '../../features/info/presentation/screens/faq_screen.dart';
 
 // Admin
-import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
-import '../../features/admin/presentation/screens/manage_facilities_screen.dart';
-import '../../features/admin/presentation/screens/add_facility_screen.dart';
-import '../../features/admin/presentation/screens/admin_profile_screen.dart';
+import '../../features/admin_panel/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin_panel/presentation/screens/manage_facilities_screen.dart';
+import '../../features/admin_panel/presentation/screens/add_facility_screen.dart';
+import '../../features/admin_panel/presentation/screens/admin_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: RouteNames.splash,
