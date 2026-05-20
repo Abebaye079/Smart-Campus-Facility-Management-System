@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_campus_app/core/theme/app_colors.dart';
 import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
 import 'package:smart_campus_app/core/widgets/main_header.dart';
 import 'package:smart_campus_app/core/widgets/input_field.dart';
 import 'package:smart_campus_app/core/widgets/primary_button.dart';
-import '../../../../core/constants/route_names.dart';
+import 'package:smart_campus_app/core/constants/route_names.dart';
+import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
+import 'package:smart_campus_app/features/facilities/presentation/providers/facility_provider.dart';
 
-class AddFacilityScreen extends StatefulWidget {
+class AddFacilityScreen extends ConsumerStatefulWidget {
   const AddFacilityScreen({super.key});
 
   @override
-  State<AddFacilityScreen> createState() => _AddFacilityScreenState();
+  ConsumerState<AddFacilityScreen> createState() => _AddFacilityScreenState();
 }
 
-class _AddFacilityScreenState extends State<AddFacilityScreen> {
+class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
   final _nameController = TextEditingController();
   final _capController = TextEditingController();
   final _descController = TextEditingController();
@@ -25,6 +28,17 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
     _capController.dispose();
     _descController.dispose();
     super.dispose();
+  }
+
+  void _showStatus(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(20),
+      ),
+    );
   }
 
   @override
@@ -78,8 +92,7 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
                             hint: "Description",
                             controller: _descController,
                             prefixIcon: Icons.description_outlined,
-                            maxLines:
-                                5, 
+                            maxLines: 5,
                           ),
                         ],
                       ),
@@ -89,8 +102,45 @@ class _AddFacilityScreenState extends State<AddFacilityScreen> {
                     PrimaryButton(
                       text: "Save",
                       icon: Icons.save_outlined,
-                      borderRadius: 28, 
-                      onPressed: () => context.go(RouteNames.manageFacilities),
+                      borderRadius: 28,
+                      onPressed: () async {
+                        // Validate inputs are not empty
+                        if (_nameController.text.trim().isEmpty ||
+                            _capController.text.trim().isEmpty) {
+                          _showStatus(
+                            "Please enter a name and capacity",
+                            Colors.orange,
+                          );
+                          return;
+                        }
+
+                        final parsedCapacity =
+                            int.tryParse(_capController.text.trim()) ?? 0;
+
+                        final newFacility = FacilityModel(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: _nameController.text.trim(),
+                          capacity: parsedCapacity,
+                          description: _descController.text.trim(),
+                          type: "Room",
+                        );
+
+                        try {
+                          await ref
+                              .read(facilityProvider.notifier)
+                              .addFacility(newFacility);
+                          _showStatus(
+                            "Facility Added Successfully!",
+                            Colors.green,
+                          );
+
+                          if (mounted) {
+                            context.go(RouteNames.manageFacilities);
+                          }
+                        } catch (e) {
+                          _showStatus("Failed to add facility: $e", Colors.red);
+                        }
+                      },
                     ),
                     const SizedBox(height: 40),
                   ],
