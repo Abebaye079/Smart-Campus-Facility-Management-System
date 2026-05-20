@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/facility_card.dart';
-import '../../../../core/widgets/user_bottom_nav_bar.dart';
-import '../../../../core/constants/route_names.dart';
-import '../../../../core/widgets/main_header.dart';
-import '../../../../core/widgets/search_bar.dart';
+import 'package:smart_campus_app/core/theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/facility_card.dart';
+import 'package:smart_campus_app/core/widgets/user_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/constants/route_names.dart';
+import 'package:smart_campus_app/core/widgets/main_header.dart';
+import 'package:smart_campus_app/core/widgets/search_bar.dart';
+import 'package:smart_campus_app/features/facilities/presentation/providers/facility_provider.dart';
 
-class FacilitiesScreen extends StatefulWidget {
+class FacilitiesScreen extends ConsumerStatefulWidget {
   const FacilitiesScreen({super.key});
 
   @override
-  State<FacilitiesScreen> createState() => _FacilitiesScreenState();
+  ConsumerState<FacilitiesScreen> createState() => _FacilitiesScreenState();
 }
 
-class _FacilitiesScreenState extends State<FacilitiesScreen> {
+class _FacilitiesScreenState extends ConsumerState<FacilitiesScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -27,6 +29,8 @@ class _FacilitiesScreenState extends State<FacilitiesScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    // Watch your AsyncNotifier state
+    final facilityState = ref.watch(facilityProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -36,7 +40,10 @@ class _FacilitiesScreenState extends State<FacilitiesScreen> {
           children: [
             const MainHeaderWidget(),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: Text(
                 'Facilities',
                 style: textTheme.headlineMedium?.copyWith(
@@ -47,47 +54,73 @@ class _FacilitiesScreenState extends State<FacilitiesScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 10.0,
+              ),
               child: SearchBarWidget(
                 controller: _searchController,
+                // Triggers local list search filtering when the user types
+                onChanged: (value) {
+                  ref.read(facilityProvider.notifier).searchFacilities(value);
+                },
               ),
             ),
 
             const SizedBox(height: 10),
 
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                children: [
-                  FacilityCard(
-                    name: 'Room 101',
-                    capacity: '30',
-                    onBook: () => context.push(RouteNames.bookingStep),
-                    onTap: () => context.push(RouteNames.facilityDetails),
+              child: facilityState.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+                error: (error, stackTrace) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(
+                      'Failed to load facilities: $error',
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  FacilityCard(
-                    name: 'Lab A',
-                    capacity: '25',
-                    onBook: () => context.push(RouteNames.bookingStep),
-                    onTap: () => context.push(RouteNames.facilityDetails),
-                  ),
-                  const SizedBox(height: 16),
-                  FacilityCard(
-                    name: 'Library Study Room 4',
-                    capacity: '6',
-                    onBook: () => context.push(RouteNames.bookingStep),
-                    onTap: () => context.push(RouteNames.facilityDetails),
-                  ),
-                  const SizedBox(height: 16),
-                  FacilityCard(
-                    name: 'Main Conference Hall',
-                    capacity: '150',
-                    onBook: () => context.push(RouteNames.bookingStep),
-                    onTap: () => context.push(RouteNames.facilityDetails),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                ),
+                data: (facilities) {
+                  if (facilities.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No facilities found.',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    itemCount: facilities.length,
+                    itemBuilder: (context, index) {
+                      final facility = facilities[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: FacilityCard(
+                          name: facility.name,
+                          capacity: facility.capacity.toString(),
+                          // Passing the individual model data down into your routes via extra
+                          onBook: () => context.push(
+                            RouteNames.bookingStep,
+                            extra: facility,
+                          ),
+                          onTap: () => context.push(
+                            RouteNames.facilityDetails,
+                            extra: facility,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
