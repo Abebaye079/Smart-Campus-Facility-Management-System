@@ -1,4 +1,4 @@
-import '../models/user_model.dart';
+import 'package:smart_campus_app/features/auth/domain/models/user_model.dart';
 
 abstract class AuthRepository {
   Future<UserModel?> getLoggedInUser();
