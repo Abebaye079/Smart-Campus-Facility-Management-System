@@ -1,31 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/back_button.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/widgets/user_bottom_nav_bar.dart';
-import '../../../../core/constants/route_names.dart';
+import 'package:smart_campus_app/core/theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/back_button.dart';
+import 'package:smart_campus_app/core/widgets/primary_button.dart';
+import 'package:smart_campus_app/core/widgets/user_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/constants/route_names.dart';
+import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
 
 class FacilitiesDetailScreen extends StatelessWidget {
-  final String? name;
-  final String? capacity;
-  final String? description;
+  final FacilityModel facility;
 
-  const FacilitiesDetailScreen({
-    super.key,
-    this.name,
-    this.capacity,
-    this.description,
-  });
+  const FacilitiesDetailScreen({super.key, required this.facility});
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final displayName = name ?? 'Room 101';
-    final displayCapacity = capacity ?? '30';
-    final displayDescription = description ?? 
-        'A spacious classroom with modern projection and seating, ideal for lectures and workshops.';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -48,9 +38,9 @@ class FacilitiesDetailScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),              
+              const SizedBox(height: 30),
               Text(
-                displayName,
+                facility.name,
                 style: textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -59,7 +49,9 @@ class FacilitiesDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 15),
               Text(
-                displayDescription,
+                facility.description.isEmpty
+                    ? 'No description available for this facility.'
+                    : facility.description,
                 style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                   height: 1.5,
@@ -71,8 +63,10 @@ class FacilitiesDetailScreen extends StatelessWidget {
                   const Icon(Icons.people_outline, color: AppColors.primary),
                   const SizedBox(width: 10),
                   Text(
-                    'Capacity: $displayCapacity',
-                    style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    'Capacity: ${facility.capacity}',
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -104,7 +98,8 @@ class FacilitiesDetailScreen extends StatelessWidget {
 
               PrimaryButton(
                 text: 'Book Now',
-                onPressed: () => context.push(RouteNames.bookingStep),
+                onPressed: () =>
+                    context.push(RouteNames.bookingStep, extra: facility),
               ),
             ],
           ),
@@ -114,10 +109,11 @@ class FacilitiesDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeSlot(BuildContext context, {
-    required String time, 
-    required String status, 
-    required bool isAvailable
+  Widget _buildTimeSlot(
+    BuildContext context, {
+    required String time,
+    required String status,
+    required bool isAvailable,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -138,14 +134,18 @@ class FacilitiesDetailScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.access_time_filled, color: AppColors.primary, size: 24),
+              const Icon(
+                Icons.access_time_filled,
+                color: AppColors.primary,
+                size: 24,
+              ),
               const SizedBox(width: 12),
               Text(
-                time, 
+                time,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
-                  color: AppColors.textPrimary
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
