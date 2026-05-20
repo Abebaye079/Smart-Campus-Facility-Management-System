@@ -1,84 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/route_names.dart';
-import '../../../../core/widgets/booking_card.dart';
-import '../../../../core/widgets/confirmation_dialog.dart'; 
-import '../../../../core/widgets/main_header.dart';
-import '../../../../core/widgets/user_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/constants/route_names.dart';
+import 'package:smart_campus_app/core/theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/booking_card.dart';
+import 'package:smart_campus_app/core/widgets/confirmation_dialog.dart';
+import 'package:smart_campus_app/core/widgets/main_header.dart';
+import 'package:smart_campus_app/core/widgets/user_bottom_nav_bar.dart';
 
-class _BookingItem {
-  final String id;
-  final String title;
-  final String date;
-  final String time;
+import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
+import 'package:smart_campus_app/features/bookings/presentation/providers/booking_provider.dart';
 
-  const _BookingItem({
-    required this.id,
-    required this.title,
-    required this.date,
-    required this.time,
-  });
-}
-
-class BookingsScreen extends StatefulWidget {
+class BookingsScreen extends ConsumerStatefulWidget {
   const BookingsScreen({super.key});
 
   @override
-  State<BookingsScreen> createState() => _BookingsScreenState();
+  ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
 }
 
-class _BookingsScreenState extends State<BookingsScreen> {
-  final List<_BookingItem> _bookings = [
-    const _BookingItem(
-      id: '1',
-      title: 'Room 101',
-      date: 'Wed, Oct 16',
-      time: '10:00 AM–11:00 AM',
-    ),
-    const _BookingItem(
-      id: '2',
-      title: 'Conference Hall B',
-      date: 'Thu, Oct 17',
-      time: '1:00 PM–2:00 PM',
-    ),
-  ];
-
+class _BookingsScreenState extends ConsumerState<BookingsScreen> {
   bool _showCancelledBanner = false;
 
-  void _onEdit(_BookingItem booking) {
-    context.push(RouteNames.bookingStep, extra: booking.id);
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      ref.read(bookingNotifierProvider.notifier).getBookings();
+    });
   }
 
-  void _onCancel(_BookingItem booking) {
+  void _onEdit(BookingModel booking) {
+    context.push(
+      RouteNames.bookingStep,
+      extra: booking,
+    );
+  }
+
+  void _onCancel(BookingModel booking) {
     CustomDialog.show(
       context: context,
       title: "Cancel Booking?",
-      message: "Are you sure you want to cancel the booking for ${booking.title}?",
-      confirmText: "Yes, Cancel",  // Matches Figma
-      cancelText: "Keep Booking", // Matches Figma
-      isBookingCancel: true,      // Triggers Horizontal Layout
-      onConfirm: () {
-        Navigator.pop(context); // Close dialog
-        
-        setState(() {
-          _bookings.removeWhere((b) => b.id == booking.id);
-          _showCancelledBanner = true;
-        });
+      message:
+          "Are you sure you want to cancel the booking for ${booking.facilityName}?",
+      confirmText: "Yes, Cancel",
+      cancelText: "Keep Booking",
+      isBookingCancel: true,
+      onConfirm: () async {
+        Navigator.pop(context);
 
-        // Hide the banner after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            setState(() => _showCancelledBanner = false);
-          }
-        });
+        await ref
+            .read(bookingNotifierProvider.notifier)
+            .cancelBooking(booking.id);
+
+        if (mounted) {
+          setState(() {
+            _showCancelledBanner = true;
+          });
+
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) {
+              setState(() {
+                _showCancelledBanner = false;
+              });
+            }
+          });
+        }
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final bookingState = ref.watch(bookingNotifierProvider);
+
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -88,8 +84,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const MainHeaderWidget(),
+
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 8.0,
+              ),
               child: Text(
                 'My Bookings',
                 style: textTheme.headlineMedium?.copyWith(
@@ -99,49 +99,82 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 10),
+
             Expanded(
               child: Stack(
                 children: [
-                  _bookings.isEmpty
-                      ? const Center(child: Text('No bookings found.'))
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          itemCount: _bookings.length,
-                          itemBuilder: (context, index) {
-                            final b = _bookings[index];
-                            return BookingCard(
-                              title: b.title,
-                              date: b.date,
-                              time: b.time,
-                              onEdit: () => _onEdit(b),
-                              onCancel: () => _onCancel(b),
-                            );
-                          },
-                        ),
-                  
-                  // Success Banner for Cancellation
+                  bookingState.when(
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+
+                    error: (error, stackTrace) => Center(
+                      child: Text(
+                        error.toString(),
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+
+                    data: (bookings) {
+                      if (bookings.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No bookings found.',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        itemCount: bookings.length,
+                        itemBuilder: (context, index) {
+                          final booking = bookings[index];
+
+                          return BookingCard(
+                            title: booking.facilityName,
+                            date: booking.date,
+                            time: booking.timeSlot,
+                            onEdit: () => _onEdit(booking),
+                            onCancel: () => _onCancel(booking),
+                          );
+                        },
+                      );
+                    },
+                  ),
+
                   if (_showCancelledBanner)
                     Positioned(
                       bottom: 20,
                       left: 20,
                       right: 20,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 20,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF9999), // Matches your Delete Success banner
+                          color: const Color(0xFFFF9999),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.check_circle_outline, color: Colors.black, size: 20),
+                            Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.black,
+                              size: 20,
+                            ),
+
                             SizedBox(width: 10),
+
                             Text(
                               'Cancelled Successfully!',
                               style: TextStyle(
-                                color: Colors.black, 
-                                fontWeight: FontWeight.bold
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
