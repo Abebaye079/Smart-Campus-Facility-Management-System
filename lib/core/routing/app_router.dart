@@ -28,6 +28,8 @@ import '../../features/admin_panel/presentation/screens/admin_profile_screen.dar
 // Auth Provider
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
+import '../../features/facilities/domain/models/facility_model.dart';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
@@ -97,7 +99,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.facilityDetails,
         builder: (context, state) {
-          return const FacilitiesDetailScreen();
+          final facility = state.extra as FacilityModel;
+          return FacilitiesDetailScreen(facility: facility);
         },
       ),
 
