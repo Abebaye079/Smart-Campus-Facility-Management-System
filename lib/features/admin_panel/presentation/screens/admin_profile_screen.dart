@@ -1,58 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/route_names.dart';
-import '../../../../core/widgets/main_header.dart';
-import '../../../../core/widgets/admin_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/theme/app_colors.dart';
+import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
+import 'package:smart_campus_app/core/widgets/main_header.dart';
 
-class AdminProfileScreen extends StatelessWidget {
+import 'package:smart_campus_app/features/auth/presentation/providers/auth_provider.dart';
+
+class AdminProfileScreen extends ConsumerStatefulWidget {
   const AdminProfileScreen({super.key});
 
   @override
+  ConsumerState<AdminProfileScreen> createState() =>
+      _AdminProfileScreenState();
+}
+
+class _AdminProfileScreenState
+    extends ConsumerState<AdminProfileScreen> {
+
+  @override
   Widget build(BuildContext context) {
+
+    final authState = ref.watch(authProvider);
+    final user = authState.value;
+
     return Scaffold(
       backgroundColor: AppColors.background,
+
       body: SafeArea(
         child: Column(
           children: [
+
             const MainHeaderWidget(),
+
             const SizedBox(height: 40),
-            
-            // Admin Profile Card
+
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 30),
               padding: const EdgeInsets.all(25),
+
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ],
               ),
+
               child: Column(
                 children: [
-                  const Text(
-                    "Henok Desalegn",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+
+                  Text(
+                    user?.name ?? '',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const Text(
-                    "henok.desalegn@university.edu",
-                    style: TextStyle(color: Colors.grey),
+
+                  Text(
+                    user?.email ?? '',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
                   ),
+
                   const SizedBox(height: 15),
+
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
+                    ),
+
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
                       borderRadius: BorderRadius.circular(20),
                     ),
+
                     child: const Text(
-                      "Admin",
+                      'Admin',
                       style: TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,
@@ -62,30 +86,29 @@ class AdminProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 40),
-            
-            // Admin Logout
+
             SizedBox(
               width: 250,
               height: 50,
+
               child: ElevatedButton(
-                onPressed: () => context.go(RouteNames.splash),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2962FF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
+                onPressed: () async {
+                  await ref
+                      .read(authProvider.notifier)
+                      .logout();
+                },
+
+                child: const Text('Logout'),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: const AdminBottomNavBar(currentIndex: 3),
+
+      bottomNavigationBar:
+          const AdminBottomNavBar(currentIndex: 3),
     );
   }
 }
