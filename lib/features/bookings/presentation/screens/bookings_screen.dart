@@ -12,69 +12,14 @@ import 'package:smart_campus_app/core/widgets/user_bottom_nav_bar.dart';
 import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
 import 'package:smart_campus_app/features/bookings/presentation/providers/booking_provider.dart';
 
-class BookingsScreen extends ConsumerStatefulWidget {
+class BookingsScreen extends ConsumerWidget {
   const BookingsScreen({super.key});
 
   @override
-  ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
-}
-
-class _BookingsScreenState extends ConsumerState<BookingsScreen> {
-  bool _showCancelledBanner = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() {
-      ref.read(bookingNotifierProvider.notifier).getBookings();
-    });
-  }
-
-  void _onEdit(BookingModel booking) {
-    context.push(
-      RouteNames.bookingStep,
-      extra: booking,
-    );
-  }
-
-  void _onCancel(BookingModel booking) {
-    CustomDialog.show(
-      context: context,
-      title: "Cancel Booking?",
-      message:
-          "Are you sure you want to cancel the booking for ${booking.facilityName}?",
-      confirmText: "Yes, Cancel",
-      cancelText: "Keep Booking",
-      isBookingCancel: true,
-      onConfirm: () async {
-        Navigator.pop(context);
-
-        await ref
-            .read(bookingNotifierProvider.notifier)
-            .cancelBooking(booking.id);
-
-        if (mounted) {
-          setState(() {
-            _showCancelledBanner = true;
-          });
-
-          Future.delayed(const Duration(seconds: 3), () {
-            if (mounted) {
-              setState(() {
-                _showCancelledBanner = false;
-              });
-            }
-          });
-        }
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // This watches the provider. Whenever create/update/cancel
+    // calls getBookings(), the UI will automatically refresh.
     final bookingState = ref.watch(bookingNotifierProvider);
-
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -84,7 +29,6 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const MainHeaderWidget(),
-
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 20.0,
@@ -99,95 +43,61 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                 ),
               ),
             ),
-
-            const SizedBox(height: 10),
-
             Expanded(
-              child: Stack(
-                children: [
-                  bookingState.when(
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-
-                    error: (error, stackTrace) => Center(
-                      child: Text(
-                        error.toString(),
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-
-                    data: (bookings) {
-                      if (bookings.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No bookings found.',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        itemCount: bookings.length,
-                        itemBuilder: (context, index) {
-                          final booking = bookings[index];
-
-                          return BookingCard(
-                            title: booking.facilityName,
-                            date: booking.date,
-                            time: booking.timeSlot,
-                            onEdit: () => _onEdit(booking),
-                            onCancel: () => _onCancel(booking),
-                          );
-                        },
+              child: bookingState.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text("Error: $error")),
+                data: (bookings) {
+                  if (bookings.isEmpty) {
+                    return const Center(child: Text('No bookings found.'));
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: bookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = bookings[index];
+                      return BookingCard(
+                        title: booking.facilityName,
+                        date: booking.date,
+                        time: booking.timeSlot,
+                        onEdit: () => context.push(
+                          RouteNames.bookingStep,
+                          extra: booking,
+                        ),
+                        onCancel: () => _confirmCancel(context, ref, booking),
                       );
                     },
-                  ),
-
-                  if (_showCancelledBanner)
-                    Positioned(
-                      bottom: 20,
-                      left: 20,
-                      right: 20,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 20,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF9999),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              color: Colors.black,
-                              size: 20,
-                            ),
-
-                            SizedBox(width: 10),
-
-                            Text(
-                              'Cancelled Successfully!',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
       bottomNavigationBar: const UserBottomNavBar(currentIndex: 2),
+    );
+  }
+
+  void _confirmCancel(
+    BuildContext context,
+    WidgetRef ref,
+    BookingModel booking,
+  ) {
+    CustomDialog.show(
+      context: context,
+      title: "Cancel Booking?",
+      message:
+          "Are you sure you want to cancel the booking for ${booking.facilityName}?",
+      confirmText: "Yes, Cancel",
+      cancelText: "Keep Booking",
+      isBookingCancel: true,
+      onConfirm: () async {
+        Navigator.pop(context);
+        // This triggers the API call and re-fetches the list from DB
+        await ref
+            .read(bookingNotifierProvider.notifier)
+            .cancelBooking(booking.id);
+      },
     );
   }
 }

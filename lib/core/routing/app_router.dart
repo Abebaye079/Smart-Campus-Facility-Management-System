@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/route_names.dart';
@@ -27,18 +28,26 @@ import '../../features/admin_panel/presentation/screens/admin_profile_screen.dar
 
 // Auth Provider
 import '../../features/auth/presentation/providers/auth_provider.dart';
-
+import '../../features/bookings/domain/models/booking_model.dart';
 import '../../features/facilities/domain/models/facility_model.dart';
 
-final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+class RouterRefreshListenable extends ChangeNotifier {
+  RouterRefreshListenable(Ref ref) {
+    ref.listen(authProvider, (_, __) {
+      notifyListeners();
+    });
+  }
+}
 
+final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: RouteNames.splash,
-
+    refreshListenable: RouterRefreshListenable(ref),
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final currentPath = state.matchedLocation;
 
+      // 1. Keep user on splash during initial storage lookups
       if (authState.isLoading) {
         return currentPath == RouteNames.splash ? null : RouteNames.splash;
       }
@@ -47,33 +56,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = user != null;
       final isAdmin = user?.role == 'admin';
 
-      final isAuthScreen = currentPath == RouteNames.login ||
+      final isAuthScreen =
+          currentPath == RouteNames.login ||
           currentPath == RouteNames.signup ||
           currentPath == RouteNames.splash;
 
-      if (!isLoggedIn && !isAuthScreen) {
-        return RouteNames.login;
+      if (!isLoggedIn) {
+        return isAuthScreen ? null : RouteNames.login;
       }
 
-      if (isLoggedIn && isAdmin && isAuthScreen) {
+      if (isAuthScreen) {
+        return isAdmin ? RouteNames.adminDashboard : RouteNames.home;
+      }
+
+      if (isAdmin && _isUserOnlyScreen(currentPath)) {
         return RouteNames.adminDashboard;
       }
 
-      if (isLoggedIn && !isAdmin && isAuthScreen) {
-        return RouteNames.home;
-      }
-
-      if (isLoggedIn && isAdmin && _isUserOnlyScreen(currentPath)) {
-        return RouteNames.adminDashboard;
-      }
-
-      if (isLoggedIn && !isAdmin && _isAdminOnlyScreen(currentPath)) {
+      if (!isAdmin && _isAdminOnlyScreen(currentPath)) {
         return RouteNames.home;
       }
 
       return null;
     },
-
     routes: [
       GoRoute(
         path: RouteNames.splash,
@@ -95,7 +100,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.facilities,
         builder: (context, state) => const FacilitiesScreen(),
       ),
-
       GoRoute(
         path: RouteNames.facilityDetails,
         builder: (context, state) {
@@ -103,14 +107,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return FacilitiesDetailScreen(facility: facility);
         },
       ),
-
       GoRoute(
         path: RouteNames.bookingStep,
         builder: (context, state) {
+          final extra = state.extra;
+          if (extra is FacilityModel) {
+            return BookingConfirmationScreen(facility: extra);
+          }
+          if (extra is BookingModel) {
+            return BookingConfirmationScreen(existingBooking: extra);
+          }
           return const BookingConfirmationScreen();
         },
       ),
-
       GoRoute(
         path: RouteNames.bookings,
         builder: (context, state) => const BookingsScreen(),
@@ -148,17 +157,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 });
 
 bool _isAdminOnlyScreen(String path) {
-  return path.startsWith('/admin');
+  return path.startsWith('/admin') && path != RouteNames.profile;
 }
 
 bool _isUserOnlyScreen(String path) {
-  const userScreens = [
-    '/home',
-    '/facilities',
-    '/facility-details',
-    '/booking-step',
-    '/bookings',
-    '/profile',
+  final userScreens = [
+    RouteNames.home,
+    RouteNames.facilities,
+    RouteNames.facilityDetails,
+    RouteNames.bookingStep,
+    RouteNames.bookings,
   ];
   return userScreens.contains(path);
 }

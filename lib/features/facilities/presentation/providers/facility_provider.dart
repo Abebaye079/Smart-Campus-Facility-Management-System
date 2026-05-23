@@ -1,95 +1,81 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
-import 'package:smart_campus_app/features/facilities/data/facility_local_data_source.dart';
 import 'package:smart_campus_app/features/facilities/data/facility_remote_data_source.dart';
 import 'package:smart_campus_app/features/facilities/data/facility_repository_impl.dart';
+import 'package:smart_campus_app/features/facilities/domain/repositories/facility_repository.dart';
 
-final facilityLocalDataSourceProvider = Provider((ref) {
-  return FacilityLocalDataSource();
-});
+final facilityRemoteDataSourceProvider = Provider<FacilityRemoteDataSource>(
+  (ref) => FacilityRemoteDataSource(),
+);
 
-final facilityRemoteDataSourceProvider = Provider((ref) {
-  return FacilityRemoteDataSource();
-});
-
-final facilityRepositoryProvider = Provider((ref) {
-  final local = ref.read(facilityLocalDataSourceProvider);
+final facilityRepositoryProvider = Provider<FacilityRepository>((ref) {
   final remote = ref.read(facilityRemoteDataSourceProvider);
-  return FacilityRepositoryImpl(local, remote);
+  return FacilityRepositoryImpl(remote);
 });
+
+final facilityProvider =
+    AsyncNotifierProvider<FacilityNotifier, List<FacilityModel>>(
+      FacilityNotifier.new,
+    );
 
 class FacilityNotifier extends AsyncNotifier<List<FacilityModel>> {
-  late final FacilityRepositoryImpl _repository;
-  List<FacilityModel> _allFacilities = [];
+  final List<FacilityModel> _allFacilities = [];
+
+  FacilityRepository get _repository => ref.read(facilityRepositoryProvider);
 
   @override
   Future<List<FacilityModel>> build() async {
-    _repository = ref.read(facilityRepositoryProvider);
-
-    _allFacilities = await _repository.getFacilities();
-    return _allFacilities;
+    final facilities = await _repository.getFacilities();
+    _allFacilities
+      ..clear()
+      ..addAll(facilities);
+    return facilities;
   }
 
-  Future<void> getFacilities() async {
-    state = const AsyncLoading();
+  Future<void> refreshFacilities() async {
+    state = const AsyncValue.loading();
     try {
-      _allFacilities = await _repository.getFacilities();
-      state = AsyncData(_allFacilities);
+      final facilities = await _repository.getFacilities();
+      _allFacilities
+        ..clear()
+        ..addAll(facilities);
+      state = AsyncValue.data(facilities);
     } catch (e, stack) {
-      state = AsyncError(e, stack);
+      state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> getFacilities() async => refreshFacilities();
 
   Future<void> addFacility(FacilityModel facility) async {
-    state = const AsyncLoading();
-    try {
-      await _repository.addFacility(facility);
-
-      _allFacilities = await _repository.getFacilities();
-      state = AsyncData(_allFacilities);
-    } catch (e, stack) {
-      state = AsyncError(e, stack);
-    }
+    await _repository.addFacility(facility);
+    await refreshFacilities();
   }
 
   Future<void> updateFacility(FacilityModel facility) async {
-    state = const AsyncLoading();
-    try {
-      await _repository.updateFacility(facility);
-
-      _allFacilities = await _repository.getFacilities();
-      state = AsyncData(_allFacilities);
-    } catch (e, stack) {
-      state = AsyncError(e, stack);
-    }
+    await _repository.updateFacility(facility);
+    await refreshFacilities();
   }
 
   Future<void> deleteFacility(String id) async {
-    state = const AsyncLoading();
-    try {
-      await _repository.deleteFacility(id);
-      // Remove it from our local master copy and update UI state
-      _allFacilities.removeWhere((item) => item.id == id);
-      state = AsyncData(_allFacilities);
-    } catch (e, stack) {
-      state = AsyncError(e, stack);
-    }
+    await _repository.deleteFacility(id);
+    await refreshFacilities();
   }
 
   void searchFacilities(String query) {
-    if (query.isEmpty) {
-      state = AsyncData(_allFacilities);
-    } else {
-      final filteredList = _allFacilities.where((facility) {
-        return facility.name.toLowerCase().contains(query.toLowerCase()) ||
-            facility.description.toLowerCase().contains(query.toLowerCase());
-      }).toList();
-      state = AsyncData(filteredList);
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      state = AsyncValue.data(List.from(_allFacilities));
+      return;
     }
+
+    final lower = trimmed.toLowerCase();
+    final filtered = _allFacilities.where((facility) {
+      return facility.name.toLowerCase().contains(lower) ||
+          facility.description.toLowerCase().contains(lower) ||
+          facility.type.toLowerCase().contains(lower);
+    }).toList();
+
+    state = AsyncValue.data(filtered);
   }
 }
-
-final facilityProvider =
-    AsyncNotifierProvider<FacilityNotifier, List<FacilityModel>>(() {
-      return FacilityNotifier();
-    });

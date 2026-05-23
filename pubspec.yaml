@@ -17,7 +17,7 @@ dependencies:
 
   # State Management
   flutter_riverpod: ^3.0.0
-
+  
   # HTTP Calls
   dio: ^5.4.0
 

@@ -35,16 +35,26 @@ class FacilityAdminCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(sub,
-                    style: const TextStyle(color: AppColors.textSecondary)),
-                Text("Capacity: $cap",
-                    style: const TextStyle(color: AppColors.textSecondary)),
-                Text("Type: $type",
-                    style: const TextStyle(color: AppColors.textSecondary)),
+                Text(
+                  sub,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                Text(
+                  "Capacity: $cap",
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                Text(
+                  "Type: $type",
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
               ],
             ),
           ),
@@ -54,7 +64,7 @@ class FacilityAdminCard extends StatelessWidget {
               const SizedBox(height: 10),
               _buildSmallButton("Delete", Icons.delete_outline, onDelete),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -64,11 +74,13 @@ class FacilityAdminCard extends StatelessWidget {
     return SizedBox(
       width: 100,
       child: ElevatedButton(
-        onPressed: onTap,
+        // 🧠 Explicit execution call closure
+        onPressed: () => onTap(),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 8),
         ),
         child: Row(
@@ -76,8 +88,10 @@ class FacilityAdminCard extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: Colors.white),
             const SizedBox(width: 4),
-            Text(label,
-                style: const TextStyle(color: Colors.white, fontSize: 12)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
           ],
         ),
       ),

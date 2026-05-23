@@ -1,43 +1,33 @@
+import 'package:dio/dio.dart';
 import 'package:smart_campus_app/core/network/api_client.dart';
 import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
 
 class FacilityRemoteDataSource {
-  // GET /facilities
   Future<List<FacilityModel>> getAllFacilities() async {
-    final response = await ApiClient.dio.get(
-      '/facilities',
-    ); 
-    final List<dynamic> data = response.data as List<dynamic>;
-    return data
-        .map((json) => FacilityModel.fromJson(json as Map<String, dynamic>))
-        .toList();
+    final response = await ApiClient.dio.get('/facilities');
+    final List<dynamic> list = (response.data is List)
+        ? response.data
+        : (response.data['data'] ?? []);
+    return list.map((json) => FacilityModel.fromJson(json)).toList();
   }
 
-  // GET /facilities/:id
+  // 🧠 ADDED: This fixes the "getFacilityById" red error in the Repository
   Future<FacilityModel> getFacilityById(String id) async {
     final response = await ApiClient.dio.get('/facilities/$id');
-    return FacilityModel.fromJson(response.data as Map<String, dynamic>);
+    return FacilityModel.fromJson(response.data);
   }
 
-  // POST /facilities
-  Future<FacilityModel> addFacility(FacilityModel facility) async {
-    final response = await ApiClient.dio.post(
-      '/facilities',
-      data: facility.toMap(),
-    );
-    return FacilityModel.fromJson(response.data as Map<String, dynamic>);
+  Future<void> addFacility(FacilityModel facility) async {
+    await ApiClient.dio.post('/facilities', data: facility.toMap());
   }
 
-  // PUT /facilities/:id
-  Future<FacilityModel> updateFacility(FacilityModel facility) async {
-    final response = await ApiClient.dio.put(
+  Future<void> updateFacility(FacilityModel facility) async {
+    await ApiClient.dio.put(
       '/facilities/${facility.id}',
       data: facility.toMap(),
     );
-    return FacilityModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  // DELETE /facilities/:id
   Future<void> deleteFacility(String id) async {
     await ApiClient.dio.delete('/facilities/$id');
   }

@@ -1,52 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:smart_campus_app/core/constants/route_names.dart';
 import 'package:smart_campus_app/core/theme/app_colors.dart';
 import 'package:smart_campus_app/core/widgets/admin_bottom_nav_bar.dart';
 import 'package:smart_campus_app/core/widgets/main_header.dart';
-
 import 'package:smart_campus_app/features/auth/presentation/providers/auth_provider.dart';
 
-class AdminProfileScreen extends ConsumerStatefulWidget {
+class AdminProfileScreen extends ConsumerWidget {
   const AdminProfileScreen({super.key});
 
   @override
-  ConsumerState<AdminProfileScreen> createState() =>
-      _AdminProfileScreenState();
-}
-
-class _AdminProfileScreenState
-    extends ConsumerState<AdminProfileScreen> {
-
-  @override
-  Widget build(BuildContext context) {
-
+  Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+
+    if (authState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final user = authState.value;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-
       body: SafeArea(
         child: Column(
           children: [
-
             const MainHeaderWidget(),
-
             const SizedBox(height: 40),
 
+            // Profile card
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 30),
               padding: const EdgeInsets.all(25),
-
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
-
               child: Column(
                 children: [
-
                   Text(
                     user?.name ?? '',
                     style: const TextStyle(
@@ -54,27 +46,22 @@ class _AdminProfileScreenState
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   Text(
                     user?.email ?? '',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(color: Colors.grey),
                   ),
-
                   const SizedBox(height: 15),
 
+                  // Admin badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 6,
                     ),
-
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
                       borderRadius: BorderRadius.circular(20),
                     ),
-
                     child: const Text(
                       'Admin',
                       style: TextStyle(
@@ -89,26 +76,28 @@ class _AdminProfileScreenState
 
             const SizedBox(height: 40),
 
+            // Logout button only — admin cannot delete account
             SizedBox(
               width: 250,
               height: 50,
-
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: () async {
-                  await ref
-                      .read(authProvider.notifier)
-                      .logout();
+                  await ref.read(authProvider.notifier).logout();
+                  if (context.mounted) {
+                    context.go(RouteNames.login);
+                  }
                 },
-
                 child: const Text('Logout'),
               ),
             ),
           ],
         ),
       ),
-
-      bottomNavigationBar:
-          const AdminBottomNavBar(currentIndex: 3),
+      bottomNavigationBar: const AdminBottomNavBar(currentIndex: 3),
     );
   }
 }

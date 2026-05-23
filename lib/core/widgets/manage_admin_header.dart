@@ -4,7 +4,9 @@ import '../theme/app_colors.dart';
 import '../constants/route_names.dart';
 
 class ManageAdminHeader extends StatefulWidget {
-  const ManageAdminHeader({super.key});
+  const ManageAdminHeader({super.key, this.onSearch});
+
+  final ValueChanged<String>? onSearch;
 
   @override
   State<ManageAdminHeader> createState() => _ManageAdminHeaderState();
@@ -49,12 +51,19 @@ class _ManageAdminHeaderState extends State<ManageAdminHeader> {
               child: TextField(
                 controller: _searchController,
                 autofocus: true,
+                onChanged: widget.onSearch,
                 decoration: InputDecoration(
                   hintText: "Search facilities...",
                   prefixIcon: const Icon(Icons.search, size: 20),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => setState(() => _isSearching = false),
+                    onPressed: () {
+                      setState(() {
+                        _isSearching = false;
+                        _searchController.clear();
+                      });
+                      widget.onSearch?.call('');
+                    },
                   ),
                   border: InputBorder.none,
                 ),

@@ -17,17 +17,15 @@ class BookingModel {
     required this.status,
   });
 
-  factory BookingModel.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
-      id: json['id'],
-      facilityId: json['facilityId'],
-      facilityName: json['facilityName'],
-      date: json['date'],
-      timeSlot: json['timeSlot'],
-      purpose: json['purpose'],
-      status: json['status'],
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      facilityId: (json['facilityId'] ?? '').toString(),
+      facilityName: (json['facilityName'] ?? '').toString(),
+      date: (json['date'] ?? '').toString(),
+      timeSlot: (json['timeSlot'] ?? '').toString(),
+      purpose: (json['purpose'] ?? '').toString(),
+      status: (json['status'] ?? 'booked').toString(),
     );
   }
 
@@ -41,5 +39,25 @@ class BookingModel {
       'purpose': purpose,
       'status': status,
     };
+  }
+
+  BookingModel copyWith({
+    String? id,
+    String? facilityId,
+    String? facilityName,
+    String? date,
+    String? timeSlot,
+    String? purpose,
+    String? status,
+  }) {
+    return BookingModel(
+      id: id ?? this.id,
+      facilityId: facilityId ?? this.facilityId,
+      facilityName: facilityName ?? this.facilityName,
+      date: date ?? this.date,
+      timeSlot: timeSlot ?? this.timeSlot,
+      purpose: purpose ?? this.purpose,
+      status: status ?? this.status,
+    );
   }
 }

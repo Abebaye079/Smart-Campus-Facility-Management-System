@@ -64,7 +64,6 @@ class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Input Card Section
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -104,7 +103,6 @@ class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
                       icon: Icons.save_outlined,
                       borderRadius: 28,
                       onPressed: () async {
-                        // Validate inputs are not empty
                         if (_nameController.text.trim().isEmpty ||
                             _capController.text.trim().isEmpty) {
                           _showStatus(
@@ -118,7 +116,7 @@ class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
                             int.tryParse(_capController.text.trim()) ?? 0;
 
                         final newFacility = FacilityModel(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          id: "",
                           name: _nameController.text.trim(),
                           capacity: parsedCapacity,
                           description: _descController.text.trim(),

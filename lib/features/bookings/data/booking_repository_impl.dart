@@ -8,10 +8,7 @@ class BookingRepositoryImpl implements BookingRepository {
   final BookingLocalDataSource local;
   final BookingRemoteDataSource remote;
 
-  BookingRepositoryImpl({
-    required this.local,
-    required this.remote,
-  });
+  BookingRepositoryImpl({required this.local, required this.remote});
 
   @override
   Future<List<BookingModel>> getBookings() async {
@@ -66,6 +63,6 @@ class BookingRepositoryImpl implements BookingRepository {
     String facilityId,
     String date,
   ) async {
-    return [];
+    return await remote.getAvailability(facilityId: facilityId, date: date);
   }
 }

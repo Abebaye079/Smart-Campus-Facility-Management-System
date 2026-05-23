@@ -15,17 +15,18 @@ class FacilityModel {
 
   factory FacilityModel.fromJson(Map<String, dynamic> json) {
     return FacilityModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      capacity: json['capacity'] as int,
-      description: json['description'] as String,
-      type: json['type'] as String,
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      name: json['name'] as String? ?? '',
+      capacity: (json['capacity'] is int)
+          ? json['capacity'] as int
+          : int.tryParse(json['capacity'].toString()) ?? 0,
+      description: json['description'] as String? ?? '',
+      type: json['type'] as String? ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'capacity': capacity,
       'description': description,

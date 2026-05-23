@@ -29,113 +29,107 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // ✅ Adapted to standard AsyncValue flags from Rule 8
     final isLoading = authState.isLoading;
-    final errorMessage = authState.hasError 
-        ? authState.error.toString().replaceAll('Exception: ', '') 
+    final errorMessage = authState.hasError
+        ? authState.error.toString().replaceAll('Exception: ', '')
         : null;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'LOG IN',
-              style: TextStyle(
-                color: Color(0xFF2962FF),
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Text(
-              'TO CONTINUE',
-              style: TextStyle(
-                color: Color(0xFF2962FF),
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            _buildLabel("Email"),
-            InputField(
-              hint: 'Enter your email',
-              controller: _emailController,
-            ),
-
-            const SizedBox(height: 20),
-
-            _buildLabel("Password"),
-            InputField(
-              hint: 'Enter your password',
-              controller: _passwordController,
-              obscure: true,
-            ),
-
-            const SizedBox(height: 15),
-
-            if (errorMessage != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  errorMessage,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 14,
+      // Ensures the body automatically scales cleanly when the IME keyboard appears
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'LOG IN',
+                  style: TextStyle(
+                    color: Color(0xFF2962FF),
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
+                const Text(
+                  'TO CONTINUE',
+                  style: TextStyle(color: Color(0xFF2962FF), fontSize: 20),
+                ),
+                const SizedBox(height: 40),
 
-            const SizedBox(height: 25),
+                _buildLabel("Email"),
+                InputField(
+                  hint: 'Enter your email',
+                  controller: _emailController,
+                ),
 
-            isLoading
-                ? const CircularProgressIndicator()
-                : PrimaryButton(
-                    text: 'Login',
-                    onPressed: () {
-                      final email = _emailController.text.trim();
-                      final password = _passwordController.text.trim();
+                const SizedBox(height: 20),
 
-                      ref
-                          .read(authProvider.notifier)
-                          .login(email, password);
-                    },
+                _buildLabel("Password"),
+                InputField(
+                  hint: 'Enter your password',
+                  controller: _passwordController,
+                  obscure: true,
+                ),
+
+                const SizedBox(height: 15),
+
+                if (errorMessage != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
                   ),
 
-            const SizedBox(height: 25),
+                const SizedBox(height: 25),
 
-            _buildFooter(
-              "Don't have an account? ",
-              "SignUp",
-              () => context.go(RouteNames.signup),
+                isLoading
+                    ? const CircularProgressIndicator()
+                    : PrimaryButton(
+                        text: 'Login',
+                        onPressed: () {
+                          final email = _emailController.text.trim();
+                          final password = _passwordController.text.trim();
+
+                          ref
+                              .read(authProvider.notifier)
+                              .login(email, password);
+                        },
+                      ),
+
+                const SizedBox(height: 25),
+
+                _buildFooter(
+                  "Don't have an account? ",
+                  "SignUp",
+                  () => context.go(RouteNames.signup),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildLabel(String text) => Align(
-        alignment: Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      );
+    alignment: Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+      ),
+    ),
+  );
 
-  Widget _buildFooter(
-    String text,
-    String action,
-    VoidCallback onTap,
-  ) {
+  Widget _buildFooter(String text, String action, VoidCallback onTap) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
