@@ -1,6 +1,5 @@
 import '../domain/models/booking_model.dart';
 import '../domain/repositories/booking_repository.dart';
-
 import 'booking_local_data_source.dart';
 import 'booking_remote_data_source.dart';
 
@@ -10,23 +9,32 @@ class BookingRepositoryImpl implements BookingRepository {
 
   BookingRepositoryImpl({required this.local, required this.remote});
 
+  // Cache first → if empty call API → save to cache
   @override
   Future<List<BookingModel>> getBookings() async {
-    final cached = await local.getAllBookings();
+    try {
+      final cached = await local.getAllBookings();
 
-    if (cached.isNotEmpty) {
-      return cached;
+      if (cached.isNotEmpty) {
+        return cached;
+      }
+
+      final remoteBookings = await remote.getBookings();
+
+      for (final booking in remoteBookings) {
+        await local.insertBooking(booking);
+      }
+
+      return remoteBookings;
+    } catch (e) {
+      // If API fails return cached data if available
+      final cached = await local.getAllBookings();
+      if (cached.isNotEmpty) return cached;
+      rethrow;
     }
-
-    final remoteBookings = await remote.getBookings();
-
-    for (final booking in remoteBookings) {
-      await local.insertBooking(booking);
-    }
-
-    return remoteBookings;
   }
 
+  // Create: call API first → save to SQLite
   @override
   Future<BookingModel> createBooking({
     required String facilityId,
@@ -40,29 +48,30 @@ class BookingRepositoryImpl implements BookingRepository {
       timeSlot: timeSlot,
       purpose: purpose,
     );
-
     await local.insertBooking(booking);
-
     return booking;
   }
 
+  // Update: call API first → update SQLite
+  @override
+  Future<void> updateBooking(BookingModel booking) async {
+    final updatedBooking = await remote.updateBooking(booking);
+    await local.updateBooking(updatedBooking);
+  }
+
+  // Cancel: call API first → delete from SQLite
   @override
   Future<void> cancelBooking(String bookingId) async {
     await remote.cancelBooking(bookingId);
-
     await local.deleteBooking(bookingId);
   }
 
-  @override
-  Future<void> updateBooking(BookingModel booking) async {
-    await local.updateBooking(booking);
-  }
-
+  // Availability: always call API — never cached (real time)
   @override
   Future<List<Map<String, dynamic>>> getAvailability(
     String facilityId,
     String date,
   ) async {
-    return await remote.getAvailability(facilityId: facilityId, date: date);
+    return await remote.getAvailability(facilityId, date);
   }
 }

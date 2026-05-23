@@ -1,45 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
+import 'package:smart_campus_app/features/bookings/data/booking_local_data_source.dart';
 import 'package:smart_campus_app/features/bookings/data/booking_remote_data_source.dart';
+import 'package:smart_campus_app/features/bookings/data/booking_repository_impl.dart';
+import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
 
-// ================= DATA SOURCE =================
-final bookingDataSourceProvider = Provider((ref) => BookingRemoteDataSource());
+// ── Repository instance ──────────────────────────────────
+final bookingRepositoryProvider = Provider<BookingRepositoryImpl>((ref) {
+  return BookingRepositoryImpl(
+    local: BookingLocalDataSource(),
+    remote: BookingRemoteDataSource(),
+  );
+});
 
-// ================= AVAILABILITY =================
-final availabilityProvider =
-    NotifierProvider<
-      AvailabilityNotifier,
-      AsyncValue<List<Map<String, dynamic>>>
-    >(AvailabilityNotifier.new);
-
-class AvailabilityNotifier
-    extends Notifier<AsyncValue<List<Map<String, dynamic>>>> {
-  List<Map<String, dynamic>> _lastData = [];
-
-  @override
-  AsyncValue<List<Map<String, dynamic>>> build() {
-    return const AsyncValue.data([]);
-  }
-
-  Future<void> getAvailability(String facilityId, String date) async {
-    state = const AsyncValue.loading();
-
-    try {
-      final response = await ref
-          .read(bookingDataSourceProvider)
-          .getAvailability(facilityId: facilityId, date: date);
-
-      // 🔥 FORCE NEW OBJECT REFERENCE (CRITICAL FIX)
-      _lastData = List<Map<String, dynamic>>.from(response);
-
-      state = AsyncValue.data([..._lastData]);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
-    }
-  }
-}
-
-// ================= BOOKINGS =================
+// ── Booking Provider ─────────────────────────────────────
 final bookingNotifierProvider =
     NotifierProvider<BookingNotifier, AsyncValue<List<BookingModel>>>(
       BookingNotifier.new,
@@ -48,57 +21,96 @@ final bookingNotifierProvider =
 class BookingNotifier extends Notifier<AsyncValue<List<BookingModel>>> {
   @override
   AsyncValue<List<BookingModel>> build() {
-    getBookings();
-    return const AsyncValue.loading();
+    return const AsyncValue.data([]);
   }
 
+  BookingRepositoryImpl get _repository => ref.read(bookingRepositoryProvider);
+
+  // Get all bookings — cache first then API
   Future<void> getBookings() async {
     try {
-      final list = await ref.read(bookingDataSourceProvider).getBookings();
-
-      state = AsyncValue.data(List.from(list)); // force refresh
+      state = const AsyncValue.loading();
+      final bookings = await _repository.getBookings();
+      state = AsyncValue.data(bookings);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
   }
 
-  Future<void> createBooking(BookingModel booking) async {
-    state = const AsyncValue.loading();
-
+  // Create new booking
+  Future<void> createBooking({
+    required String facilityId,
+    required String date,
+    required String timeSlot,
+    required String purpose,
+  }) async {
     try {
-      await ref
-          .read(bookingDataSourceProvider)
-          .createBooking(
-            facilityId: booking.facilityId,
-            date: booking.date,
-            timeSlot: booking.timeSlot,
-            purpose: booking.purpose,
-          );
-
-      await getBookings();
+      state = const AsyncValue.loading();
+      final booking = await _repository.createBooking(
+        facilityId: facilityId,
+        date: date,
+        timeSlot: timeSlot,
+        purpose: purpose,
+      );
+      // Add new booking to current list
+      final currentBookings = state.value ?? [];
+      state = AsyncValue.data([...currentBookings, booking]);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
   }
 
-  Future<void> updateBooking(String id, BookingModel booking) async {
-    state = const AsyncValue.loading();
-
+  // Update existing booking
+  Future<void> updateBooking(BookingModel booking) async {
     try {
-      await ref.read(bookingDataSourceProvider).updateBooking(id, booking);
-
-      await getBookings();
+      state = const AsyncValue.loading();
+      await _repository.updateBooking(booking);
+      // Refresh list after update
+      final bookings = await _repository.getBookings();
+      state = AsyncValue.data(bookings);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
   }
 
+  // Cancel a booking
   Future<void> cancelBooking(String id) async {
-    state = const AsyncValue.loading();
-
     try {
-      await ref.read(bookingDataSourceProvider).cancelBooking(id);
-      await getBookings();
+      state = const AsyncValue.loading();
+      await _repository.cancelBooking(id);
+      // Remove cancelled booking from current list
+      final currentBookings = state.value ?? [];
+      state = AsyncValue.data(
+        currentBookings.where((b) => b.id != id).toList(),
+      );
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+}
+
+// ── Availability Provider ────────────────────────────────
+final availabilityProvider =
+    NotifierProvider<
+      AvailabilityNotifier,
+      AsyncValue<List<Map<String, dynamic>>>
+    >(AvailabilityNotifier.new);
+
+class AvailabilityNotifier
+    extends Notifier<AsyncValue<List<Map<String, dynamic>>>> {
+  @override
+  AsyncValue<List<Map<String, dynamic>>> build() {
+    return const AsyncValue.data([]);
+  }
+
+  BookingRepositoryImpl get _repository => ref.read(bookingRepositoryProvider);
+
+  // Always calls API — real time availability
+  Future<void> getAvailability(String facilityId, String date) async {
+    try {
+      state = const AsyncValue.loading();
+      final slots = await _repository.getAvailability(facilityId, date);
+      state = AsyncValue.data(slots);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

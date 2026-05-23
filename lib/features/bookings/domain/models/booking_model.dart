@@ -17,18 +17,21 @@ class BookingModel {
     required this.status,
   });
 
+  // Convert API response (MongoDB) → BookingModel
+  // MongoDB returns _id not id
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
-      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
       facilityId: (json['facilityId'] ?? '').toString(),
-      facilityName: (json['facilityName'] ?? '').toString(),
-      date: (json['date'] ?? '').toString(),
-      timeSlot: (json['timeSlot'] ?? '').toString(),
-      purpose: (json['purpose'] ?? '').toString(),
-      status: (json['status'] ?? 'booked').toString(),
+      facilityName: json['facilityName'] ?? '',
+      date: json['date'] ?? '',
+      timeSlot: json['timeSlot'] ?? '',
+      purpose: json['purpose'] ?? '',
+      status: json['status'] ?? 'booked',
     );
   }
 
+  // Convert BookingModel → Map to save in SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -41,23 +44,21 @@ class BookingModel {
     };
   }
 
-  BookingModel copyWith({
-    String? id,
-    String? facilityId,
-    String? facilityName,
-    String? date,
-    String? timeSlot,
-    String? purpose,
-    String? status,
-  }) {
+  // Convert SQLite row → BookingModel
+  factory BookingModel.fromMap(Map<String, dynamic> map) {
     return BookingModel(
-      id: id ?? this.id,
-      facilityId: facilityId ?? this.facilityId,
-      facilityName: facilityName ?? this.facilityName,
-      date: date ?? this.date,
-      timeSlot: timeSlot ?? this.timeSlot,
-      purpose: purpose ?? this.purpose,
-      status: status ?? this.status,
+      id: map['id'] ?? '',
+      facilityId: map['facilityId'] ?? '',
+      facilityName: map['facilityName'] ?? '',
+      date: map['date'] ?? '',
+      timeSlot: map['timeSlot'] ?? '',
+      purpose: map['purpose'] ?? '',
+      status: map['status'] ?? 'booked',
     );
+  }
+
+  @override
+  String toString() {
+    return 'BookingModel(id: $id, facilityName: $facilityName, date: $date, timeSlot: $timeSlot)';
   }
 }

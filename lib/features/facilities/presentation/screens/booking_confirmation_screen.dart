@@ -7,10 +7,8 @@ import 'package:smart_campus_app/core/constants/route_names.dart';
 import 'package:smart_campus_app/core/widgets/back_button.dart';
 import 'package:smart_campus_app/core/widgets/primary_button.dart';
 import 'package:smart_campus_app/core/widgets/user_bottom_nav_bar.dart';
-
 import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
 import 'package:smart_campus_app/features/bookings/presentation/providers/booking_provider.dart';
-
 import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
 
 class BookingConfirmationScreen extends ConsumerStatefulWidget {
@@ -33,74 +31,100 @@ class _BookingConfirmationScreenState
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   int? _selectedTimeSlotIndex;
-
   final TextEditingController _purposeController = TextEditingController();
-
-  String get _facilityId {
-    final id = widget.facility?.id ?? widget.existingBooking?.facilityId;
-
-    debugPrint("SELECTED FACILITY ID: $id");
-
-    return id ?? '';
-  }
-
-  String get _facilityName =>
-      widget.facility?.name ??
-      widget.existingBooking?.facilityName ??
-      'Room 101';
 
   @override
   void initState() {
     super.initState();
+    _selectedDay = DateTime.now();
 
-    _selectedDay = widget.existingBooking != null
-        ? DateTime.tryParse(widget.existingBooking!.date) ?? DateTime.now()
-        : DateTime.now();
-
+    // Pre-fill purpose if editing existing booking
     if (widget.existingBooking != null) {
       _purposeController.text = widget.existingBooking!.purpose;
     }
 
-    if (_facilityId.isNotEmpty) {
+    // Load availability for today
+    final facilityId =
+        widget.facility?.id ?? widget.existingBooking?.facilityId ?? '';
+
+    if (facilityId.isNotEmpty) {
       Future.microtask(() {
         ref
             .read(availabilityProvider.notifier)
-            .getAvailability(
-              _facilityId,
-              _selectedDay!.toIso8601String().split('T')[0],
-            );
+            .getAvailability(facilityId, _selectedDay.toString().split(' ')[0]);
       });
     }
   }
 
-  Future<void> _handleBooking() async {
-    final availabilityState = ref.read(availabilityProvider);
+  @override
+  void dispose() {
+    _purposeController.dispose();
+    super.dispose();
+  }
 
-    if (availabilityState.value == null || _selectedTimeSlotIndex == null) {
+  Future<void> _handleBooking() async {
+    // Validate purpose field
+    if (_purposeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Please enter the purpose of booking'),
+        ),
+      );
       return;
     }
 
+    if (_selectedTimeSlotIndex == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Please select a time slot'),
+        ),
+      );
+      return;
+    }
+
+    final availabilityState = ref.read(availabilityProvider);
+    if (availabilityState.value == null) return;
+
     final selectedSlot = availabilityState.value![_selectedTimeSlotIndex!];
 
-    final booking = BookingModel(
-      id: widget.existingBooking?.id ?? '',
-      facilityId: _facilityId,
-      facilityName: _facilityName,
-      date: _selectedDay!.toIso8601String().split('T')[0],
-      timeSlot: selectedSlot['time'],
-      purpose: _purposeController.text,
-      status: 'booked',
-    );
+    final facilityId =
+        widget.facility?.id ?? widget.existingBooking?.facilityId ?? '';
+
+    final facilityName =
+        widget.facility?.name ?? widget.existingBooking?.facilityName ?? '';
+
+    final date = _selectedDay.toString().split(' ')[0];
+    final timeSlot = selectedSlot['time'].toString();
+    final purpose = _purposeController.text.trim();
 
     try {
       if (widget.existingBooking != null) {
+        // Edit existing booking
+        final updatedBooking = BookingModel(
+          id: widget.existingBooking!.id,
+          facilityId: facilityId,
+          facilityName: facilityName,
+          date: date,
+          timeSlot: timeSlot,
+          purpose: purpose,
+          status: 'booked',
+        );
         await ref
             .read(bookingNotifierProvider.notifier)
-            .updateBooking(widget.existingBooking!.id, booking);
+            .updateBooking(updatedBooking);
       } else {
-        await ref.read(bookingNotifierProvider.notifier).createBooking(booking);
+        // Create new booking
+        await ref
+            .read(bookingNotifierProvider.notifier)
+            .createBooking(
+              facilityId: facilityId,
+              date: date,
+              timeSlot: timeSlot,
+              purpose: purpose,
+            );
       }
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -112,16 +136,12 @@ class _BookingConfirmationScreenState
             ),
           ),
         );
-
         context.go(RouteNames.bookings);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Text('Booking failed: $e'),
-          ),
+          SnackBar(backgroundColor: Colors.red, content: Text(e.toString())),
         );
       }
     }
@@ -132,6 +152,11 @@ class _BookingConfirmationScreenState
     final availabilityState = ref.watch(availabilityProvider);
     final bookingState = ref.watch(bookingNotifierProvider);
     final textTheme = Theme.of(context).textTheme;
+
+    final facilityName =
+        widget.facility?.name ??
+        widget.existingBooking?.facilityName ??
+        'Facility';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -145,7 +170,7 @@ class _BookingConfirmationScreenState
               const SizedBox(height: 25),
 
               Text(
-                _facilityName,
+                facilityName,
                 style: textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
@@ -155,13 +180,16 @@ class _BookingConfirmationScreenState
 
               const Text(
                 'FINALIZING YOUR BOOKING',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
               ),
 
               const SizedBox(height: 25),
-
               _buildCalendarCard(),
-
               const SizedBox(height: 30),
 
               const Text(
@@ -173,12 +201,39 @@ class _BookingConfirmationScreenState
 
               availabilityState.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text(error.toString())),
-                data: (slots) => _buildTimeSlotsGrid(slots),
+                error: (error, stackTrace) => Center(
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Failed to load time slots',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          final facilityId =
+                              widget.facility?.id ??
+                              widget.existingBooking?.facilityId ??
+                              '';
+                          ref
+                              .read(availabilityProvider.notifier)
+                              .getAvailability(
+                                facilityId,
+                                _selectedDay.toString().split(' ')[0],
+                              );
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+                data: (slots) => slots.isEmpty
+                    ? const Center(child: Text('No time slots available'))
+                    : _buildTimeSlotsGrid(slots),
               ),
 
               const SizedBox(height: 30),
-
+              // Purpose field
               TextField(
                 controller: _purposeController,
                 decoration: InputDecoration(
@@ -198,8 +253,8 @@ class _BookingConfirmationScreenState
                           ? 'Update Booking'
                           : 'Confirm Booking',
                       onPressed:
-                          (_selectedTimeSlotIndex == null ||
-                              _facilityId.isEmpty)
+                          (_selectedDay == null ||
+                              _selectedTimeSlotIndex == null)
                           ? null
                           : _handleBooking,
                     ),
@@ -213,11 +268,27 @@ class _BookingConfirmationScreenState
 
   Widget _buildCalendarCard() {
     return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
       padding: const EdgeInsets.all(12),
       child: TableCalendar(
         firstDay: DateTime.utc(2022, 1, 1),
         lastDay: DateTime.utc(2030, 12, 31),
         focusedDay: _focusedDay,
+        headerStyle: const HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+        ),
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         onDaySelected: (selectedDay, focusedDay) {
           setState(() {
@@ -225,14 +296,14 @@ class _BookingConfirmationScreenState
             _focusedDay = focusedDay;
             _selectedTimeSlotIndex = null;
           });
-
-          final id = _facilityId;
-
-          if (id.isEmpty) return;
-
+          final facilityId =
+              widget.facility?.id ?? widget.existingBooking?.facilityId ?? '';
           ref
               .read(availabilityProvider.notifier)
-              .getAvailability(id, selectedDay.toIso8601String().split('T')[0]);
+              .getAvailability(
+                facilityId,
+                selectedDay.toString().split(' ')[0],
+              );
         },
       ),
     );
@@ -251,41 +322,58 @@ class _BookingConfirmationScreenState
       itemCount: slots.length,
       itemBuilder: (context, index) {
         final slot = slots[index];
-        final isAvailable = slot['available'] == true;
-        final isSelected = _selectedTimeSlotIndex == index;
-
+        final bool isAvailable = slot['available'] == true;
+        final bool isSelected = _selectedTimeSlotIndex == index;
         return GestureDetector(
           onTap: isAvailable
-              ? () {
-                  setState(() {
-                    _selectedTimeSlotIndex = index;
-                  });
-                }
+              ? () => setState(() => _selectedTimeSlotIndex = index)
               : null,
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: isSelected ? Colors.blue : Colors.grey.shade300,
+                color: isSelected
+                    ? const Color(0xFF2D6AFA)
+                    : Colors.grey.shade100,
                 width: isSelected ? 2 : 1,
               ),
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  slot['time'] ?? '',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  isAvailable ? 'Available' : 'Booked',
-                  style: TextStyle(
-                    color: isAvailable ? Colors.green : Colors.red,
+                  slot['time'].toString(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Text('Status: ', style: TextStyle(fontSize: 12)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isAvailable ? Colors.green : Colors.red,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        isAvailable ? 'Available' : 'Booked',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

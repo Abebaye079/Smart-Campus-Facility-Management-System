@@ -5,65 +5,91 @@ import '../domain/models/booking_model.dart';
 class BookingRemoteDataSource {
   final Dio dio = ApiClient.dio;
 
+  // Get all bookings for logged in user
   Future<List<BookingModel>> getBookings() async {
-    final response = await dio.get('/bookings');
-
-    final List<dynamic> data = response.data is List ? response.data : [];
-
-    return data
-        .map((e) => BookingModel.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
+    try {
+      final response = await dio.get('/bookings');
+      return (response.data as List)
+          .map((e) => BookingModel.fromJson(e))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['message'] ?? 'Failed to get bookings');
+    }
   }
 
+  // Create a new booking
   Future<BookingModel> createBooking({
     required String facilityId,
     required String date,
     required String timeSlot,
     required String purpose,
   }) async {
-    final response = await dio.post(
-      '/bookings',
-      data: {
-        'facilityId': facilityId,
-        'date': date,
-        'timeSlot': timeSlot,
-        'purpose': purpose,
-      },
-    );
-
-    return BookingModel.fromJson(Map<String, dynamic>.from(response.data));
-  }
-
-  Future<BookingModel> updateBooking(String id, BookingModel booking) async {
-    final response = await dio.put(
-      '/bookings/$id',
-      data: {
-        'date': booking.date,
-        'timeSlot': booking.timeSlot,
-        'purpose': booking.purpose,
-      },
-    );
-
-    return BookingModel.fromJson(Map<String, dynamic>.from(response.data));
-  }
-
-  Future<void> cancelBooking(String id) async {
-    await dio.delete('/bookings/$id');
-  }
-
-  Future<List<Map<String, dynamic>>> getAvailability({
-    required String facilityId,
-    required String date,
-  }) async {
-    final response = await dio.get(
-      '/bookings/availability',
-      queryParameters: {'facilityId': facilityId, 'date': date},
-    );
-
-    if (response.data is List) {
-      return List<Map<String, dynamic>>.from(response.data);
+    try {
+      final response = await dio.post(
+        '/bookings',
+        data: {
+          'facilityId': facilityId,
+          'date': date,
+          'timeSlot': timeSlot,
+          'purpose': purpose,
+        },
+      );
+      return BookingModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to create booking',
+      );
     }
+  }
 
-    return [];
+  // Update existing booking
+  Future<BookingModel> updateBooking(BookingModel booking) async {
+    try {
+      final response = await dio.put(
+        '/bookings/${booking.id}',
+        data: {
+          'date': booking.date,
+          'timeSlot': booking.timeSlot,
+          'purpose': booking.purpose,
+        },
+      );
+      return BookingModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to update booking',
+      );
+    }
+  }
+
+  // Cancel a booking
+  Future<void> cancelBooking(String id) async {
+    try {
+      await dio.delete('/bookings/$id');
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to cancel booking',
+      );
+    }
+  }
+
+  // Get availability for a facility on a date
+  // Always calls API — never cached (real time data)
+  Future<List<Map<String, dynamic>>> getAvailability(
+    String facilityId,
+    String date,
+  ) async {
+    try {
+      final response = await dio.get(
+        '/facilities/$facilityId/availability',
+        queryParameters: {'date': date},
+      );
+      return (response.data as List)
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Failed to get availability',
+      );
+    }
   }
 }
