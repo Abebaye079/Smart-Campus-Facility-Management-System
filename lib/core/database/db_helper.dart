@@ -45,6 +45,7 @@ class DBHelper {
     await db.execute('''
       CREATE TABLE bookings (
         id TEXT PRIMARY KEY,
+        userId TEXT NOT NULL, 
         facilityId TEXT NOT NULL,
         facilityName TEXT NOT NULL,
         date TEXT NOT NULL,

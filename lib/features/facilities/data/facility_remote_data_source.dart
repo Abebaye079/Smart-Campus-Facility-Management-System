@@ -11,7 +11,6 @@ class FacilityRemoteDataSource {
     return list.map((json) => FacilityModel.fromJson(json)).toList();
   }
 
-  // 🧠 ADDED: This fixes the "getFacilityById" red error in the Repository
   Future<FacilityModel> getFacilityById(String id) async {
     final response = await ApiClient.dio.get('/facilities/$id');
     return FacilityModel.fromJson(response.data);

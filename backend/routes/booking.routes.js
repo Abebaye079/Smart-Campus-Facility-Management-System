@@ -1,226 +1,100 @@
 const express = require('express');
 const router = express.Router();
-
 const Booking = require('../models/booking.model');
-const Facility = require('../models/facility.model');
 const { protect } = require('../middleware/auth.middleware');
 
-
-// =====================================
-// GET BOOKINGS
-// =====================================
+// GET ALL BOOKINGS FOR LOGGED IN USER ONLY 
 router.get('/', protect, async (req, res) => {
   try {
-    const bookings = await Booking.find({
-      userId: req.user._id,
-    });
-
-    console.log('FETCHED BOOKINGS:', bookings);
-
+    const bookings = await Booking.find({ userId: req.user.id });
     res.json(bookings);
-
   } catch (error) {
-    console.log('GET BOOKINGS ERROR:', error);
-
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 });
 
-
-// =====================================
-// GET AVAILABILITY  ⭐ FIX ADDED HERE
-// =====================================
-router.get('/availability', protect, async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
-    const { facilityId, date } = req.query;
-
-    console.log('AVAILABILITY REQUEST:', req.query);
-
-    if (!facilityId || !date) {
-      return res.status(400).json({
-        message: 'facilityId and date required',
-      });
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
     }
-
-    const ALL_SLOTS = [
-      "8:30 AM - 10:30 AM",
-      "10:30 AM - 12:30 PM",
-      "1:30 PM - 3:30 PM",
-      "3:30 PM - 5:30 PM",
-    ];
-
-    const bookings = await Booking.find({ facilityId, date });
-
-    const bookedSlots = bookings.map(b => b.timeSlot);
-
-    const availability = ALL_SLOTS.map(slot => ({
-      time: slot,
-      available: !bookedSlots.includes(slot),
-    }));
-
-    console.log('AVAILABILITY RESPONSE:', availability);
-
-    res.json(availability);
-
+    
+    // Security Guard: Prevent other users from reading someone else's document
+    if (booking.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to access this booking record' });
+    }
+    
+    res.json(booking);
   } catch (error) {
-    console.log('AVAILABILITY ERROR:', error);
-
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 });
 
-
-// =====================================
-// CREATE BOOKING
-// =====================================
+//  CREATE NEW BOOKING RECORD 
 router.post('/', protect, async (req, res) => {
   try {
-    console.log('BOOKING REQUEST BODY:', req.body);
-
-    const { facilityId, date, timeSlot, purpose } = req.body;
-
-    if (!facilityId || !date || !timeSlot || !purpose) {
-      return res.status(400).json({
-        message: 'Missing required fields',
-      });
-    }
-
-    if (!facilityId.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        message: 'Invalid facilityId format',
-      });
-    }
-
-    const facility = await Facility.findById(facilityId);
-
-    if (!facility) {
-      return res.status(404).json({
-        message: 'Facility not found',
-      });
-    }
-
-    const existingBooking = await Booking.findOne({
-      facilityId,
-      date,
-      timeSlot,
-    });
-
-    if (existingBooking) {
-      return res.status(400).json({
-        message: 'This time slot is already booked',
-      });
-    }
-
+    const { facilityId, facilityName, date, timeSlot, purpose } = req.body;
+    
     const booking = await Booking.create({
+      userId: req.user.id, 
       facilityId,
-      facilityName: facility.name,
-      userId: req.user._id,
+      facilityName,
       date,
       timeSlot,
       purpose,
       status: 'booked',
     });
-
-    console.log('BOOKING CREATED:', booking);
-
-    return res.status(201).json(booking);
-
+    
+    res.status(201).json(booking);
   } catch (error) {
-    console.log('CREATE BOOKING ERROR:', error);
-
-    return res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 });
 
-
-// =====================================
-// UPDATE BOOKING
-// =====================================
+// UPDATE AN EXISTING BOOKING 
 router.put('/:id', protect, async (req, res) => {
   try {
-    const { date, timeSlot, purpose } = req.body;
-
-    const booking = await Booking.findOne({
-      _id: req.params.id,
-      userId: req.user._id,
-    });
+    const { date, timeSlot, purpose, status } = req.body;
+    let booking = await Booking.findById(req.params.id);
 
     if (!booking) {
-      return res.status(404).json({
-        message: 'Booking not found',
-      });
+      return res.status(404).json({ message: 'Booking not found' });
     }
 
-    const newDate = date || booking.date;
-    const newTimeSlot = timeSlot || booking.timeSlot;
-
-    if (newDate !== booking.date || newTimeSlot !== booking.timeSlot) {
-      const existingBooking = await Booking.findOne({
-        facilityId: booking.facilityId,
-        date: newDate,
-        timeSlot: newTimeSlot,
-        _id: { $ne: req.params.id },
-      });
-
-      if (existingBooking) {
-        return res.status(400).json({
-          message: 'This time slot is already booked',
-        });
-      }
+    if (booking.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to modify this booking record' });
     }
 
-    booking.date = newDate;
-    booking.timeSlot = newTimeSlot;
-    booking.purpose = purpose || booking.purpose;
-
-    await booking.save();
+    booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { date, timeSlot, purpose, status },
+      { new: true, runValidators: true }
+    );
 
     res.json(booking);
-
   } catch (error) {
-    console.log('UPDATE BOOKING ERROR:', error);
-
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 });
 
-
-// =====================================
-// DELETE BOOKING
-// =====================================
+//  CANCEL A BOOKING 
 router.delete('/:id', protect, async (req, res) => {
   try {
-    const booking = await Booking.findOne({
-      _id: req.params.id,
-      userId: req.user._id,
-    });
+    const booking = await Booking.findById(req.params.id);
 
     if (!booking) {
-      return res.status(404).json({
-        message: 'Booking not found',
-      });
+      return res.status(404).json({ message: 'Booking not found' });
     }
 
-    await Booking.findByIdAndDelete(req.params.id);
+    if (booking.userId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to cancel this booking record' });
+    }
 
-    res.json({
-      message: 'Booking cancelled successfully',
-    });
-
+    await booking.deleteOne();
+    res.json({ message: 'Booking cancelled successfully' });
   } catch (error) {
-    console.log('DELETE BOOKING ERROR:', error);
-
-    res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
 });
 

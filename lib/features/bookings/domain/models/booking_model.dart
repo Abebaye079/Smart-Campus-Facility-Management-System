@@ -1,5 +1,6 @@
 class BookingModel {
   final String id;
+  final String userId; 
   final String facilityId;
   final String facilityName;
   final String date;
@@ -9,6 +10,7 @@ class BookingModel {
 
   BookingModel({
     required this.id,
+    required this.userId,
     required this.facilityId,
     required this.facilityName,
     required this.date,
@@ -18,10 +20,10 @@ class BookingModel {
   });
 
   // Convert API response (MongoDB) → BookingModel
-  // MongoDB returns _id not id
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
+      userId: (json['userId'] ?? '').toString(), 
       facilityId: (json['facilityId'] ?? '').toString(),
       facilityName: json['facilityName'] ?? '',
       date: json['date'] ?? '',
@@ -31,10 +33,10 @@ class BookingModel {
     );
   }
 
-  // Convert BookingModel → Map to save in SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'userId': userId, 
       'facilityId': facilityId,
       'facilityName': facilityName,
       'date': date,
@@ -48,6 +50,7 @@ class BookingModel {
   factory BookingModel.fromMap(Map<String, dynamic> map) {
     return BookingModel(
       id: map['id'] ?? '',
+      userId: map['userId'] ?? '', 
       facilityId: map['facilityId'] ?? '',
       facilityName: map['facilityName'] ?? '',
       date: map['date'] ?? '',
@@ -59,6 +62,6 @@ class BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, facilityName: $facilityName, date: $date, timeSlot: $timeSlot)';
+    return 'BookingModel(id: $id, userId: $userId, facilityName: $facilityName, date: $date, timeSlot: $timeSlot)';
   }
 }

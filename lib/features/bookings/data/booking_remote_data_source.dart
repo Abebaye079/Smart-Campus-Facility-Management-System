@@ -5,7 +5,6 @@ import '../domain/models/booking_model.dart';
 class BookingRemoteDataSource {
   final Dio dio = ApiClient.dio;
 
-  // Get all bookings for logged in user
   Future<List<BookingModel>> getBookings() async {
     try {
       final response = await dio.get('/bookings');
@@ -20,6 +19,7 @@ class BookingRemoteDataSource {
   // Create a new booking
   Future<BookingModel> createBooking({
     required String facilityId,
+    required String facilityName, 
     required String date,
     required String timeSlot,
     required String purpose,
@@ -29,6 +29,7 @@ class BookingRemoteDataSource {
         '/bookings',
         data: {
           'facilityId': facilityId,
+          'facilityName': facilityName, 
           'date': date,
           'timeSlot': timeSlot,
           'purpose': purpose,
@@ -42,7 +43,6 @@ class BookingRemoteDataSource {
     }
   }
 
-  // Update existing booking
   Future<BookingModel> updateBooking(BookingModel booking) async {
     try {
       final response = await dio.put(
@@ -61,7 +61,6 @@ class BookingRemoteDataSource {
     }
   }
 
-  // Cancel a booking
   Future<void> cancelBooking(String id) async {
     try {
       await dio.delete('/bookings/$id');
@@ -73,7 +72,6 @@ class BookingRemoteDataSource {
   }
 
   // Get availability for a facility on a date
-  // Always calls API — never cached (real time data)
   Future<List<Map<String, dynamic>>> getAvailability(
     String facilityId,
     String date,

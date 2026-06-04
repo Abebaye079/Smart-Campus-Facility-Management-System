@@ -3,10 +3,13 @@ import '../domain/models/booking_model.dart';
 import '../../../core/database/db_helper.dart';
 
 class BookingLocalDataSource {
-  // Get all bookings from SQLite
-  Future<List<BookingModel>> getAllBookings() async {
+  Future<List<BookingModel>> getAllBookings(String userId) async {
     final db = await DBHelper.database;
-    final maps = await db.query('bookings');
+    final maps = await db.query(
+      'bookings',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
     // Use fromMap not fromJson — reading from SQLite not API
     return maps.map((e) => BookingModel.fromMap(e)).toList();
   }
@@ -38,7 +41,6 @@ class BookingLocalDataSource {
     await db.delete('bookings', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Clear all bookings from SQLite
   Future<void> clearAll() async {
     await DBHelper.clearTable('bookings');
   }

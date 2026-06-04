@@ -3,16 +3,18 @@ import 'package:smart_campus_app/features/bookings/data/booking_local_data_sourc
 import 'package:smart_campus_app/features/bookings/data/booking_remote_data_source.dart';
 import 'package:smart_campus_app/features/bookings/data/booking_repository_impl.dart';
 import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
+import 'package:smart_campus_app/features/auth/data/auth_local_data_source.dart'; 
 
-// ── Repository instance ──────────────────────────────────
+
 final bookingRepositoryProvider = Provider<BookingRepositoryImpl>((ref) {
   return BookingRepositoryImpl(
     local: BookingLocalDataSource(),
     remote: BookingRemoteDataSource(),
+    authLocal: AuthLocalDataSource(), 
   );
 });
 
-// ── Booking Provider ─────────────────────────────────────
+
 final bookingNotifierProvider =
     NotifierProvider<BookingNotifier, AsyncValue<List<BookingModel>>>(
       BookingNotifier.new,
@@ -37,59 +39,63 @@ class BookingNotifier extends Notifier<AsyncValue<List<BookingModel>>> {
     }
   }
 
-  // Create new booking
   Future<void> createBooking({
     required String facilityId,
+    required String facilityName,
     required String date,
     required String timeSlot,
     required String purpose,
   }) async {
+    final currentBookings = state.value ?? [];
+    state = AsyncValue<List<BookingModel>>.loading().copyWithPrevious(state);
+    
     try {
-      state = const AsyncValue.loading();
       final booking = await _repository.createBooking(
         facilityId: facilityId,
+        facilityName: facilityName,
         date: date,
         timeSlot: timeSlot,
         purpose: purpose,
       );
-      // Add new booking to current list
-      final currentBookings = state.value ?? [];
+      
       state = AsyncValue.data([...currentBookings, booking]);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
+      rethrow; // Pass up to the UI to intercept the context route redirection flow
     }
   }
 
-  // Update existing booking
+
   Future<void> updateBooking(BookingModel booking) async {
+    final currentBookings = state.value ?? [];
+    
     try {
-      state = const AsyncValue.loading();
       await _repository.updateBooking(booking);
-      // Refresh list after update
-      final bookings = await _repository.getBookings();
-      state = AsyncValue.data(bookings);
+      final updatedList = currentBookings.map((element) {
+        return element.id == booking.id ? booking : element;
+      }).toList();
+      state = AsyncValue.data(updatedList);
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      state = AsyncValue.data(currentBookings);
+      rethrow; 
     }
   }
 
-  // Cancel a booking
+
   Future<void> cancelBooking(String id) async {
+    final currentBookings = state.value ?? [];
+    final updatedList = currentBookings.where((b) => b.id != id).toList();
+    state = AsyncValue.data(updatedList);
+    
     try {
-      state = const AsyncValue.loading();
+      // Execute network command silently in background thread container
       await _repository.cancelBooking(id);
-      // Remove cancelled booking from current list
-      final currentBookings = state.value ?? [];
-      state = AsyncValue.data(
-        currentBookings.where((b) => b.id != id).toList(),
-      );
     } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      state = AsyncValue.data(currentBookings);
     }
   }
 }
 
-// ── Availability Provider ────────────────────────────────
 final availabilityProvider =
     NotifierProvider<
       AvailabilityNotifier,
@@ -105,7 +111,6 @@ class AvailabilityNotifier
 
   BookingRepositoryImpl get _repository => ref.read(bookingRepositoryProvider);
 
-  // Always calls API — real time availability
   Future<void> getAvailability(String facilityId, String date) async {
     try {
       state = const AsyncValue.loading();

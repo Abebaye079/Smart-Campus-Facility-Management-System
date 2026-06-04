@@ -20,11 +20,12 @@ class FacilitiesDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header navigation row at the top
               Row(
                 children: [
                   BackButtonWidget(onTap: () => context.pop()),
@@ -38,135 +39,80 @@ class FacilitiesDetailScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
-              Text(
-                facility.name,
-                style: textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  fontSize: 28,
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                facility.description.isEmpty
-                    ? 'No description available for this facility.'
-                    : facility.description,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 25),
-              Row(
-                children: [
-                  const Icon(Icons.people_outline, color: AppColors.primary),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Capacity: ${facility.capacity}',
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+              
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Card(
+                      elevation: 0,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(color: Colors.grey.shade100),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(28.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              facility.name,
+                              textAlign: TextAlign.center, 
+                              style: textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                                fontSize: 26,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              facility.description.isEmpty
+                                  ? 'No description available for this facility.'
+                                  : facility.description,
+                              textAlign: TextAlign.center, 
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            
+                            
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.people_outline, color: AppColors.primary),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Capacity: ${facility.capacity}',
+                                  style: textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+                            
+                            PrimaryButton(
+                              text: 'Book Now',
+                              onPressed: () => context.push(
+                                RouteNames.bookingStep, 
+                                extra: facility,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 40),
-
-              Text(
-                'Available Time Slots',
-                style: textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              _buildTimeSlot(
-                context,
-                time: '9:00 AM - 10:00 AM',
-                status: 'Booked',
-                isAvailable: false,
-              ),
-              const SizedBox(height: 12),
-              _buildTimeSlot(
-                context,
-                time: '10:00 AM - 11:00 AM',
-                status: 'Available',
-                isAvailable: true,
-              ),
-              const SizedBox(height: 40),
-
-              PrimaryButton(
-                text: 'Book Now',
-                onPressed: () =>
-                    context.push(RouteNames.bookingStep, extra: facility),
               ),
             ],
           ),
         ),
       ),
       bottomNavigationBar: const UserBottomNavBar(currentIndex: 1),
-    );
-  }
-
-  Widget _buildTimeSlot(
-    BuildContext context, {
-    required String time,
-    required String status,
-    required bool isAvailable,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.access_time_filled,
-                color: AppColors.primary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                time,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isAvailable ? AppColors.success : AppColors.error,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              status,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

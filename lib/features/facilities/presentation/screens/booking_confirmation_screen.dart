@@ -10,6 +10,7 @@ import 'package:smart_campus_app/core/widgets/user_bottom_nav_bar.dart';
 import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
 import 'package:smart_campus_app/features/bookings/presentation/providers/booking_provider.dart';
 import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
+import 'package:smart_campus_app/features/auth/presentation/providers/auth_provider.dart';
 
 class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final FacilityModel? facility;
@@ -43,7 +44,6 @@ class _BookingConfirmationScreenState
       _purposeController.text = widget.existingBooking!.purpose;
     }
 
-    // Load availability for today
     final facilityId =
         widget.facility?.id ?? widget.existingBooking?.facilityId ?? '';
 
@@ -99,11 +99,16 @@ class _BookingConfirmationScreenState
     final timeSlot = selectedSlot['time'].toString();
     final purpose = _purposeController.text.trim();
 
+    // READ THE LOGGED-IN USER ID FROM AUTH PROVIDER
+    final currentUserId = ref.read(authProvider).value?.id ?? '';
+
     try {
       if (widget.existingBooking != null) {
-        // Edit existing booking
         final updatedBooking = BookingModel(
           id: widget.existingBooking!.id,
+          userId: widget.existingBooking!.userId.isNotEmpty 
+              ? widget.existingBooking!.userId 
+              : currentUserId, 
           facilityId: facilityId,
           facilityName: facilityName,
           date: date,
@@ -115,11 +120,11 @@ class _BookingConfirmationScreenState
             .read(bookingNotifierProvider.notifier)
             .updateBooking(updatedBooking);
       } else {
-        // Create new booking
         await ref
             .read(bookingNotifierProvider.notifier)
             .createBooking(
               facilityId: facilityId,
+              facilityName: facilityName, 
               date: date,
               timeSlot: timeSlot,
               purpose: purpose,

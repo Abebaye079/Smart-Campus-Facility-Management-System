@@ -5,6 +5,7 @@ abstract class BookingRepository {
 
   Future<BookingModel> createBooking({
     required String facilityId,
+    required String facilityName,
     required String date,
     required String timeSlot,
     required String purpose,
