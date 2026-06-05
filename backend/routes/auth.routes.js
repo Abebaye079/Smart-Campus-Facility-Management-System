@@ -5,8 +5,8 @@ const User = require('../models/user.model');
 const { protect } = require('../middleware/auth.middleware');
 
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN,
+    return jwt.sign({ id }, process.env.JWT_SECRET || 'fallback_secret', {
+        expiresIn: process.env.JWT_EXPIRES_IN || '30d',
     });
 };
 
@@ -14,19 +14,29 @@ router.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-        return res.status(400).json({ message: 'User already exists' });
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Please fill in all fields' });
         }
 
-        const user = await User.create({ name, email, password });
+        const sanitizedEmail = email.trim().toLowerCase();
+
+        const userExists = await User.findOne({ email: sanitizedEmail });
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const user = await User.create({ 
+            name: name.trim(), 
+            email: sanitizedEmail, 
+            password: password.trim() 
+        });
 
         res.status(201).json({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id),
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -37,18 +47,23 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide email and password' });
+        }
 
-        if (!user || !(await user.matchPassword(password))) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        const sanitizedEmail = email.trim().toLowerCase();
+        const user = await User.findOne({ email: sanitizedEmail });
+
+        if (!user || !(await user.matchPassword(password.trim()))) {
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
 
         res.json({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user._id),
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

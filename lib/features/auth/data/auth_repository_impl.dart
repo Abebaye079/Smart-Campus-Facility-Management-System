@@ -34,22 +34,17 @@ class AuthRepositoryImpl implements AuthRepository {
       ApiClient.setToken(user.token);
       return user;
     } catch (e) {
-      throw Exception("Login repository failure: $e");
+      throw Exception("Login failed: $e");
     }
   }
 
   @override
-  Future<UserModel> signup(
-    String name,
-    String email,
-    String password,
-  ) async {
+  Future<UserModel> signup(String name, String email, String password) async {
     try {
       final user = await remoteDataSource.signup(name, email, password);
-      await localDataSource.saveUser(user);
       return user;
     } catch (e) {
-      throw Exception("Signup repository failure: $e");
+      throw Exception("Signup failed: $e");
     }
   }
 

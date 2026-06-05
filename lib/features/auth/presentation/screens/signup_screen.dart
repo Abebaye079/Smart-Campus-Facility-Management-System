@@ -19,14 +19,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
   final _confirmPassController = TextEditingController();
-
   final _passFocusNode = FocusNode();
+
   bool _showPassHint = false;
+  String? _validationError;
 
   @override
   void initState() {
     super.initState();
-
     _passFocusNode.addListener(() {
       setState(() {
         _showPassHint = _passFocusNode.hasFocus;
@@ -50,22 +50,25 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final password = _passController.text.trim();
     final confirmPassword = _confirmPassController.text.trim();
 
-    if (name.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
+    setState(() => _validationError = null);
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      setState(() => _validationError = 'Please fill in all fields');
       return;
     }
 
     if (!email.contains('@')) {
+      setState(() => _validationError = 'Please enter a valid email');
       return;
     }
 
     if (password.length < 8) {
+      setState(() => _validationError = 'Password must be at least 8 characters');
       return;
     }
 
     if (password != confirmPassword) {
+      setState(() => _validationError = 'Passwords do not match');
       return;
     }
 
@@ -74,123 +77,140 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           email,
           password,
         );
+
+    final authState = ref.read(authProvider);
+    if (!authState.hasError && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('Account created successfully! Please login.'),
+        ),
+      );
+      
+      ref.invalidate(authProvider);
+      context.go(RouteNames.login);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
-    // ✅ Adapted to team AsyncValue specification (Rule 8)
     final isLoading = authState.isLoading;
-    final errorMessage = authState.hasError
-        ? authState.error.toString().replaceAll('Exception: ', '')
-        : null;
+
+    String? backendError;
+    if (authState.hasError) {
+      final errorString = authState.error.toString();
+      if (!errorString.toLowerCase().contains('login')) {
+        backendError = errorString.replaceAll('Exception: ', '');
+      }
+    }
+
+    final errorMessage = backendError ?? _validationError;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 30,
-            vertical: 80,
-          ),
-          child: Column(
-            children: [
-              const Text(
-                'SIGN UP',
-                style: TextStyle(
-                  color: Color(0xFF2962FF),
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'SIGN UP',
+                  style: TextStyle(
+                    color: Color(0xFF2962FF),
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const Text(
-                'TO CONTINUE',
-                style: TextStyle(
-                  color: Color(0xFF2962FF),
-                  fontSize: 20,
+                const Text(
+                  'TO CONTINUE',
+                  style: TextStyle(
+                    color: Color(0xFF2962FF),
+                    fontSize: 20,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
+                
+                _buildLabel("Full Name"),
+                InputField(
+                  hint: "Enter your full name",
+                  controller: _nameController,
+                ),
+                const SizedBox(height: 20),
 
-              _buildLabel("Full Name"),
-              InputField(
-                hint: "Enter your full name",
-                controller: _nameController,
-              ),
+                _buildLabel("Email"),
+                InputField(
+                  hint: "Enter your email",
+                  controller: _emailController,
+                ),
+                const SizedBox(height: 20),
 
-              const SizedBox(height: 20),
+                _buildLabel("Password"),
+                InputField(
+                  hint: "Create a password",
+                  controller: _passController,
+                  obscure: true,
+                  focusNode: _passFocusNode,
+                ),
 
-              _buildLabel("Email"),
-              InputField(
-                hint: "Enter your email",
-                controller: _emailController,
-              ),
-
-              const SizedBox(height: 20),
-
-              _buildLabel("Password"),
-              InputField(
-                hint: "Create a password",
-                controller: _passController,
-                obscure: true,
-                focusNode: _passFocusNode,
-              ),
-
-              if (_showPassHint)
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Password must be at least 8 characters',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 12,
+                if (_showPassHint)
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Text(
+                        'Password must be at least 8 characters',
+                        style: TextStyle(color: Colors.red, fontSize: 12),
                       ),
                     ),
                   ),
+
+                const SizedBox(height: 20),
+
+                _buildLabel("Confirm Password"),
+                InputField(
+                  hint: "Repeat your password",
+                  controller: _confirmPassController,
+                  obscure: true,
                 ),
+                const SizedBox(height: 20),
 
-              const SizedBox(height: 20),
-
-              _buildLabel("Confirm Password"),
-              InputField(
-                hint: "Repeat your password",
-                controller: _confirmPassController,
-                obscure: true,
-              ),
-
-              const SizedBox(height: 20),
-
-              if (errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    errorMessage,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
+
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : PrimaryButton(
+                        text: 'Sign Up',
+                        onPressed: _handleSignUp,
+                      ),
+
+                const SizedBox(height: 25),
+
+                _buildFooter(
+                  "Already have an account? ",
+                  "Login",
+                  () {
+                    ref.invalidate(authProvider);
+                    context.go(RouteNames.login);
+                  },
                 ),
-
-              isLoading
-                  ? const CircularProgressIndicator()
-                  : PrimaryButton(
-                      text: 'Sign Up',
-                      onPressed: _handleSignUp,
-                    ),
-
-              const SizedBox(height: 25),
-
-              _buildFooter(
-                "Already have an account? ",
-                "Login",
-                () => context.go(RouteNames.login),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -211,11 +231,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
       );
 
-  Widget _buildFooter(
-    String text,
-    String action,
-    VoidCallback onTap,
-  ) =>
+  Widget _buildFooter(String text, String action, VoidCallback onTap) =>
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

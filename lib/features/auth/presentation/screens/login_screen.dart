@@ -17,6 +17,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String? _validationError;
 
   @override
   void dispose() {
@@ -25,19 +26,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    setState(() => _validationError = null);
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _validationError = 'Please fill in all fields');
+      return;
+    }
+
+    if (!email.contains('@')) {
+      setState(() => _validationError = 'Please enter a valid email');
+      return;
+    }
+
+    await ref.read(authProvider.notifier).login(email, password);
+
+    if (!mounted) return;
+
+    final authState = ref.read(authProvider);
+
+    if (authState.hasError) {
+      return;
+    }
+
+    if (authState.value != null) {
+      context.go(RouteNames.home); 
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
     final isLoading = authState.isLoading;
-    final errorMessage = authState.hasError
-        ? authState.error.toString().replaceAll('Exception: ', '')
-        : null;
+
+    String? backendError;
+    if (authState.hasError) {
+      final errorString = authState.error.toString();
+      if (!errorString.toLowerCase().contains('signup') && 
+          !errorString.toLowerCase().contains('register')) {
+        backendError = errorString.replaceAll('Exception: ', '');
+      }
+    }
+
+    final errorMessage = backendError ?? _validationError;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // Ensures the body automatically scales cleanly when the IME keyboard appears
-      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -57,7 +94,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const Text(
                   'TO CONTINUE',
-                  style: TextStyle(color: Color(0xFF2962FF), fontSize: 20),
+                  style: TextStyle(
+                    color: Color(0xFF2962FF),
+                    fontSize: 20,
+                  ),
                 ),
                 const SizedBox(height: 40),
 
@@ -66,7 +106,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   hint: 'Enter your email',
                   controller: _emailController,
                 ),
-
                 const SizedBox(height: 20),
 
                 _buildLabel("Password"),
@@ -75,40 +114,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: _passwordController,
                   obscure: true,
                 ),
-
                 const SizedBox(height: 15),
 
                 if (errorMessage != null)
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      errorMessage,
-                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        errorMessage,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
 
                 const SizedBox(height: 25),
 
                 isLoading
-                    ? const CircularProgressIndicator()
+                    ? const Center(child: CircularProgressIndicator())
                     : PrimaryButton(
                         text: 'Login',
-                        onPressed: () {
-                          final email = _emailController.text.trim();
-                          final password = _passwordController.text.trim();
-
-                          ref
-                              .read(authProvider.notifier)
-                              .login(email, password);
-                        },
+                        onPressed: _handleLogin,
                       ),
 
                 const SizedBox(height: 25),
-
                 _buildFooter(
                   "Don't have an account? ",
                   "SignUp",
-                  () => context.go(RouteNames.signup),
+                  () {
+                    ref.invalidate(authProvider);
+                    context.go(RouteNames.signup);
+                  },
                 ),
               ],
             ),
@@ -119,15 +158,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildLabel(String text) => Align(
-    alignment: Alignment.centerLeft,
-    child: Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-      ),
-    ),
-  );
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      );
 
   Widget _buildFooter(String text, String action, VoidCallback onTap) {
     return Row(

@@ -47,9 +47,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authProvider);
       final currentPath = state.matchedLocation;
 
-      // 1. Keep user on splash during initial storage lookups
-      if (authState.isLoading) {
-        return currentPath == RouteNames.splash ? null : RouteNames.splash;
+      if (authState.isLoading && currentPath == RouteNames.splash) {
+        return null;
       }
 
       final user = authState.value;
@@ -170,3 +169,4 @@ bool _isUserOnlyScreen(String path) {
   ];
   return userScreens.contains(path);
 }
+
