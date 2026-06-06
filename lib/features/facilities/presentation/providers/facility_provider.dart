@@ -1,16 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
+import 'package:smart_campus_app/features/facilities/data/facility_local_data_source.dart';
 import 'package:smart_campus_app/features/facilities/data/facility_remote_data_source.dart';
 import 'package:smart_campus_app/features/facilities/data/facility_repository_impl.dart';
+import 'package:smart_campus_app/features/facilities/domain/models/facility_model.dart';
 import 'package:smart_campus_app/features/facilities/domain/repositories/facility_repository.dart';
 
 final facilityRemoteDataSourceProvider = Provider<FacilityRemoteDataSource>(
   (ref) => FacilityRemoteDataSource(),
 );
 
+final facilityLocalDataSourceProvider = Provider<FacilityLocalDataSource>(
+  (ref) => FacilityLocalDataSource(),
+);
+
 final facilityRepositoryProvider = Provider<FacilityRepository>((ref) {
   final remote = ref.read(facilityRemoteDataSourceProvider);
-  return FacilityRepositoryImpl(remote);
+  final local = ref.read(facilityLocalDataSourceProvider);
+  return FacilityRepositoryImpl(
+    localDataSource: local,
+    remoteDataSource: remote,
+  );
 });
 
 final facilityProvider =
@@ -71,9 +80,9 @@ class FacilityNotifier extends AsyncNotifier<List<FacilityModel>> {
 
     final lower = trimmed.toLowerCase();
     final filtered = _allFacilities.where((facility) {
-      return facility.name.toLowerCase().contains(lower) ||
-          facility.description.toLowerCase().contains(lower) ||
-          facility.type.toLowerCase().contains(lower);
+      return facility.name.toLowerCase().contains(lower) || 
+             facility.description.toLowerCase().contains(lower) || 
+             facility.type.toLowerCase().contains(lower);
     }).toList();
 
     state = AsyncValue.data(filtered);
