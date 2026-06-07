@@ -17,15 +17,26 @@ class FacilityRemoteDataSource {
   }
 
   Future<void> addFacility(FacilityModel facility) async {
-    await ApiClient.dio.post('/facilities', data: facility.toMap());
-  }
+  await ApiClient.dio.post('/facilities', data: {
+    'name': facility.name,
+    'capacity': facility.capacity,
+    'description': facility.description,
+    'type': facility.type,
+  });
+}
 
-  Future<void> updateFacility(FacilityModel facility) async {
-    await ApiClient.dio.put(
-      '/facilities/${facility.id}',
-      data: facility.toMap(),
-    );
-  }
+Future<void> updateFacility(FacilityModel facility) async {
+  print('=== UPDATING FACILITY ID: ${facility.id} ===');
+  await ApiClient.dio.put(
+    '/facilities/${facility.id}',
+    data: {
+      'name': facility.name,
+      'capacity': facility.capacity,
+      'description': facility.description,
+      'type': facility.type,
+    },
+  );
+}
 
   Future<void> deleteFacility(String id) async {
     await ApiClient.dio.delete('/facilities/$id');
