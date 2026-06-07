@@ -103,6 +103,7 @@ class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
                       icon: Icons.save_outlined,
                       borderRadius: 28,
                       onPressed: () async {
+                        print('=== SAVE TAPPED ===');
                         if (_nameController.text.trim().isEmpty ||
                             _capController.text.trim().isEmpty) {
                           _showStatus(
@@ -114,6 +115,7 @@ class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
 
                         final parsedCapacity =
                             int.tryParse(_capController.text.trim()) ?? 0;
+                        print('=== CAPACITY: $parsedCapacity ===');
 
                         final newFacility = FacilityModel(
                           id: "",
@@ -124,19 +126,26 @@ class _AddFacilityScreenState extends ConsumerState<AddFacilityScreen> {
                         );
 
                         try {
+                          print('=== CALLING ADD FACILITY ===');
                           await ref
                               .read(facilityProvider.notifier)
                               .addFacility(newFacility);
+                          print('=== ADD FACILITY SUCCESS ===');
                           _showStatus(
                             "Facility Added Successfully!",
                             Colors.green,
                           );
 
                           if (mounted) {
+                            print('=== NAVIGATING TO MANAGE ===');
                             context.go(RouteNames.manageFacilities);
                           }
                         } catch (e) {
-                          _showStatus("Failed to add facility: $e", Colors.red);
+                          print('=== ADD FACILITY ERROR: $e ===');
+                          _showStatus(
+                            "Failed to add facility: $e",
+                            Colors.red,
+                          );
                         }
                       },
                     ),

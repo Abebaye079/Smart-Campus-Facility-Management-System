@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs');
 const connectDB = require('./config/db');
 
 dotenv.config();
@@ -28,20 +27,20 @@ const createAdmin = async () => {
         const adminExists = await User.findOne({ role: 'admin' });
 
         if (!adminExists) {
-        const hashedPassword = await bcrypt.hash('admin1', 10);
-
-        await User.create({
-            name: 'Sara Taye',
-            email: 'sarataye@aau.edu',
-            password: hashedPassword,
-            role: 'admin',
-        });
-        console.log('✅ Admin created successfully');
+            // FIXED: Password changed to 'admin1234' (9 characters) to bypass minlength requirement.
+            // Passed as plain text so Mongoose hooks hash it exactly ONCE.
+            await User.create({
+                name: 'Sara Taye',
+                email: 'sarataye@aau.edu',
+                password: 'admin1234', 
+                role: 'admin',
+            });
+            console.log('✅ Admin created successfully');
         } else {
-        console.log('✅ Admin already exists');
+            console.log('✅ Admin already exists');
         }
     } catch (error) {
-    console.error('❌ Error creating admin:', error.message);
+        console.error('❌ Error creating admin:', error.message);
     }
 };
 
