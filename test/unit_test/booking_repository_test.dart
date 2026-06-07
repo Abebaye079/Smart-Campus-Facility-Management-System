@@ -3,7 +3,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:smart_campus_app/features/bookings/data/booking_local_data_source.dart';
 import 'package:smart_campus_app/features/bookings/domain/models/booking_model.dart';
-import '../unit/booking_repository_test.mocks.dart';
+import 'booking_repository_test.mocks.dart';
 
 @GenerateMocks([BookingLocalDataSource])
 void main() {

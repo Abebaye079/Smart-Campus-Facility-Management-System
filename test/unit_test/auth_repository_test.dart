@@ -3,7 +3,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:smart_campus_app/features/auth/data/auth_local_data_source.dart';
 import 'package:smart_campus_app/features/auth/domain/models/user_model.dart';
-import '../unit/auth_repository_test.mocks.dart';
+import 'auth_repository_test.mocks.dart';
 
 @GenerateMocks([AuthLocalDataSource])
 void main() {
